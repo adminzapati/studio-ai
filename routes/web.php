@@ -9,13 +9,10 @@ use App\Http\Controllers\Features\BatchController;
 use App\Http\Controllers\Features\BeautifierController;
 use App\Http\Controllers\Features\StagingController;
 use App\Http\Controllers\Features\VirtualModelController;
-use App\Http\Controllers\Features\WizardController;
 
 // Storage Controllers
-use App\Http\Controllers\Storage\ProductController;
 use App\Http\Controllers\Storage\PromptController;
 use App\Http\Controllers\Storage\ImageController;
-use App\Http\Controllers\Storage\ModelController;
 
 // Admin Controllers
 use App\Http\Controllers\Admin\UserController;
@@ -54,7 +51,6 @@ Route::middleware('auth')->prefix('features')->name('features.')->group(function
     Route::get('/beautifier', [BeautifierController::class, 'index'])->name('beautifier.index');
     Route::get('/staging', [StagingController::class, 'index'])->name('staging.index');
     Route::get('/virtual-model', [VirtualModelController::class, 'index'])->name('virtual-model.index');
-    Route::get('/wizard', [WizardController::class, 'index'])->name('wizard.index');
 });
 
 /*
@@ -63,10 +59,13 @@ Route::middleware('auth')->prefix('features')->name('features.')->group(function
 |--------------------------------------------------------------------------
 */
 Route::middleware('auth')->prefix('storage')->name('storage.')->group(function () {
-    Route::resource('products', ProductController::class);
+    Route::post('prompts/generate', [PromptController::class, 'generate'])->name('prompts.generate');
+    Route::post('prompts/{prompt}/duplicate', [PromptController::class, 'duplicate'])->name('prompts.duplicate');
+    Route::post('prompts/{prompt}/toggle-favorite', [PromptController::class, 'toggleFavorite'])->name('prompts.toggle-favorite');
     Route::resource('prompts', PromptController::class);
     Route::resource('images', ImageController::class);
-    Route::resource('models', ModelController::class);
+    // Model Presets (Public Read, Admin Write via Admin Group)
+    Route::get('model-presets', [App\Http\Controllers\Admin\ModelPresetController::class, 'index'])->name('model-presets.index');
 });
 
 /*
@@ -93,8 +92,8 @@ Route::middleware(['auth', 'role:Admin'])->prefix('admin')->name('admin.')->grou
     // Wizard Options
     Route::resource('wizard-options', WizardOptionController::class);
     
-    // Model Presets
-    Route::resource('model-presets', ModelPresetController::class);
+    // Model Presets (Admin Full Access)
+    Route::resource('model-presets', ModelPresetController::class)->except(['index']);
 });
 
 require __DIR__.'/auth.php';

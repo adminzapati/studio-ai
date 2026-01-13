@@ -58,14 +58,6 @@
             <span class="ml-3" x-show="sidebarOpen" x-transition:enter="transition ease-out duration-100 delay-100" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100">Product Staging</span>
         </a>
 
-        <!-- Auto Prompt Wizard -->
-        <a href="{{ route('features.wizard.index') }}" 
-           class="flex items-center px-3 py-2.5 text-sm font-medium rounded-xl transition-colors whitespace-nowrap"
-           :class="request()->routeIs('features.wizard.*') ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-900/20 dark:text-indigo-300' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:text-gray-900 dark:hover:text-gray-200'">
-            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.384-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>
-            <span class="ml-3" x-show="sidebarOpen" x-transition:enter="transition ease-out duration-100 delay-100" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100">Auto Prompt</span>
-        </a>
-
         <!-- GROUP: STORAGE -->
         <div class="pt-4 pb-2" x-show="sidebarOpen">
             <p class="px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Storage</p>
@@ -74,36 +66,28 @@
             <div class="h-0.5 w-8 bg-emerald-200 dark:bg-emerald-900 mx-auto rounded"></div>
         </div>
 
-        <!-- My Products -->
-        <a href="{{ route('storage.products.index') }}" 
-           class="flex items-center px-3 py-2.5 text-sm font-medium rounded-xl transition-colors whitespace-nowrap"
-           :class="request()->routeIs('storage.products.*') ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-300' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:text-gray-900 dark:hover:text-gray-200'">
-            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
-            <span class="ml-3" x-show="sidebarOpen" x-transition:enter="transition ease-out duration-100 delay-100" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100">My Products</span>
-        </a>
-
-        <!-- My Prompts -->
+        <!-- Prompts -->
         <a href="{{ route('storage.prompts.index') }}" 
            class="flex items-center px-3 py-2.5 text-sm font-medium rounded-xl transition-colors whitespace-nowrap"
            :class="request()->routeIs('storage.prompts.*') ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-300' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:text-gray-900 dark:hover:text-gray-200'">
             <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-            <span class="ml-3" x-show="sidebarOpen" x-transition:enter="transition ease-out duration-100 delay-100" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100">My Prompts</span>
+            <span class="ml-3" x-show="sidebarOpen" x-transition:enter="transition ease-out duration-100 delay-100" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100">Prompts</span>
         </a>
 
-        <!-- My Images -->
+        <!-- Images Library -->
         <a href="{{ route('storage.images.index') }}" 
            class="flex items-center px-3 py-2.5 text-sm font-medium rounded-xl transition-colors whitespace-nowrap"
            :class="request()->routeIs('storage.images.*') ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-300' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:text-gray-900 dark:hover:text-gray-200'">
             <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-            <span class="ml-3" x-show="sidebarOpen" x-transition:enter="transition ease-out duration-100 delay-100" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100">My Images</span>
+            <span class="ml-3" x-show="sidebarOpen" x-transition:enter="transition ease-out duration-100 delay-100" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100">Images Library</span>
         </a>
 
-        <!-- Model Library -->
-        <a href="{{ route('storage.models.index') }}" 
+        <!-- Model Presets -->
+        <a href="{{ route('storage.model-presets.index') }}" 
            class="flex items-center px-3 py-2.5 text-sm font-medium rounded-xl transition-colors whitespace-nowrap"
-           :class="request()->routeIs('storage.models.*') ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-300' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:text-gray-900 dark:hover:text-gray-200'">
+           :class="request()->routeIs('storage.model-presets.*') ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-300' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:text-gray-900 dark:hover:text-gray-200'">
             <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
-            <span class="ml-3" x-show="sidebarOpen" x-transition:enter="transition ease-out duration-100 delay-100" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100">Model Library</span>
+            <span class="ml-3" x-show="sidebarOpen" x-transition:enter="transition ease-out duration-100 delay-100" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100">Model Presets</span>
         </a>
 
         <!-- HISTORY -->
@@ -146,14 +130,6 @@
                :class="request()->routeIs('admin.wizard-options.*') ? 'bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-300' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:text-gray-900 dark:hover:text-gray-200'">
                 <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.384-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>
                 <span class="ml-3" x-show="sidebarOpen" x-transition:enter="transition ease-out duration-100 delay-100" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100">Wizard Options</span>
-            </a>
-
-            <!-- Model Presets -->
-            <a href="{{ route('admin.model-presets.index') }}" 
-               class="flex items-center px-3 py-2.5 text-sm font-medium rounded-xl transition-colors whitespace-nowrap"
-               :class="request()->routeIs('admin.model-presets.*') ? 'bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-300' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:text-gray-900 dark:hover:text-gray-200'">
-                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
-                <span class="ml-3" x-show="sidebarOpen" x-transition:enter="transition ease-out duration-100 delay-100" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100">Model Presets</span>
             </a>
         @endrole
     </nav>

@@ -17,10 +17,10 @@
 | **Foundation** | **Auth & RBAC** | P0 | ✅ **Done** | Added `avatar` to Users table. Use `firstOrCreate` for seeders. |
 | **Foundation** | **Models & DB** | P0 | ✅ **Done** | Fixed Migration Order logic. |
 | **Foundation** | **User Management** | P1 | ✅ **Done** | Admin CRUD & Lock. |
-| **Storage Hub** | **Prompt Library** | P1 | ✅ **Done** | Adopted **UI/UX Pro Max** standards (Bento Grid, SVG Icons). |
-| **Storage Hub** | **Image Library** | P1 | ✅ **Done** | Gallery Grid, Upload, Delete. |
+| **Storage Hub** | **Prompt Library** | P1 | ✅ **Done** | Search, Filter, Sort, Duplicate, Edit, Image Thumbnails. |
+| **Storage Hub** | **Image Library** | P1 | ✅ **Done** | Auto-sync from Prompt Creation. Gallery Grid. |
 | **Storage Hub** | **Model Library** | P1 | ✅ **Done** | Admin-only Management, User Read-only. |
-| **Feature** | **Auto Prompt Wizard** | P1 | ✅ **Done** | 5-Step Logic, Alpine.js, Save to Library. |
+| **Feature** | **Prompt Creation** | P1 | ✅ **Done** | 3-pane workflow, Edit Mode support, Image Reference storage. |
 | **Feature** | **Batch Processor** | P1 | ⏳ Pending | - |
 | **Feature** | **Product Staging** | P2 | ⏳ Pending | - |
 | **Feature** | **Virtual Model** | P2 | ⏳ Pending | - |
@@ -40,8 +40,8 @@
 
 ### 2.2 Storage Hub (Sắp triển khai)
 *(Giữ nguyên logic từ Spec v1.3, chưa có thay đổi)*
-- **Prompt Library**: Store prompts with `wizard_data` JSON for re-editing.
-- **Image Library**: Phân loại ảnh Upload/Generated/Reference.
+- **Prompt Library**: Store prompts with `wizard_data` JSON. Track `creation_method` (Manual/Image/Wizard).
+- **Image Library**: Display Only. Viewer.js integration for Zoom/Rotate.
 - **Model Library**: System Models only for now (Admin managed).
 
 ### 2.3 Auto Prompt Wizard
@@ -71,3 +71,11 @@
     *   **Action**: Tạo mới, Chỉnh sửa thông tin, Reset mật khẩu.
     *   **Security**: Khóa (Lock) và mở khóa tài khoản.
     *   **Role**: Gán quyền Admin, Manager, User.
+
+### 7. Refactoring (Maintenance)
+*   **Image System**:
+    *   **Centralized**: Gom tụ điểm lưu trữ về 1 folder duy nhất.
+    *   **Display Logic**: Image Library chỉ hiển thị, nguồn ảnh từ Prompt Creation.
+    *   **Fix**: Symbolic link repair.
+    *   **Viewer**: Integrated Viewer.js for advanced image viewing.
+    *   **Method Tracking**: Added `method` field to Prompts (Manual/Image/Wizard).

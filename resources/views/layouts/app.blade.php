@@ -8,8 +8,9 @@
         <title>{{ config('app.name', 'Laravel') }}</title>
 
         <!-- Fonts -->
-        <link rel="preconnect" href="https://fonts.bunny.net">
-        <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
 
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -84,8 +85,8 @@
                 </header>
 
                 <!-- Page Content -->
-                <main class="p-8 w-full overflow-x-hidden">
-                    <div class="max-w-7xl mx-auto">
+                <main class="{{ $attributes->get('padding', 'p-8') }} w-full overflow-x-hidden">
+                    <div class="{{ $attributes->get('maxWidth', 'max-w-7xl') }} mx-auto">
                         @isset($header)
                             <div class="mb-8">
                                 <h2 class="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">
@@ -101,6 +102,28 @@
                     </div>
                 </main>
             </div>
+        </div>
+
+        <!-- Global Toast Notification -->
+        <div x-data="{ show: false, message: '', type: 'success' }" 
+             @toast.window="show = true; message = $event.detail.message || $event.detail; type = $event.detail.type || 'success'; setTimeout(() => show = false, 3000)"
+             x-show="show"
+             x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="opacity-0 translate-y-2"
+             x-transition:enter-end="opacity-100 translate-y-0"
+             x-transition:leave="transition ease-in duration-200"
+             x-transition:leave-start="opacity-100 translate-y-0"
+             x-transition:leave-end="opacity-0 translate-y-2"
+             class="fixed bottom-4 right-4 text-white px-6 py-3 rounded-xl shadow-lg flex items-center space-x-2 z-[9999]"
+             :class="type === 'success' ? 'bg-green-500' : 'bg-red-500'"
+             style="display: none;">
+            <svg x-show="type === 'success'" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+            </svg>
+            <svg x-show="type === 'error'" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+            <span x-text="message"></span>
         </div>
     </body>
 </html>

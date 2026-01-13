@@ -14,7 +14,7 @@ class ImageController extends Controller
     {
         $images = \App\Models\ImageLibrary::where('user_id', auth()->id())
             ->latest()
-            ->paginate(12);
+            ->paginate(20);
         
         return view('storage.images.index', compact('images'));
     }
@@ -47,7 +47,7 @@ class ImageController extends Controller
                 'tags' => $request->input('tags'),
             ]);
 
-            return redirect()->route('images.index')->with('success', 'Image uploaded successfully.');
+            return redirect()->route('storage.images.index')->with('success', 'Image uploaded successfully.');
         }
 
         return back()->withErrors(['image' => 'Image upload failed.']);
@@ -91,6 +91,6 @@ class ImageController extends Controller
         
         $image->delete();
 
-        return redirect()->route('images.index')->with('success', 'Image deleted successfully.');
+        return redirect()->route('storage.images.index')->with('success', 'Image deleted successfully.');
     }
 }

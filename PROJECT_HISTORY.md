@@ -81,3 +81,131 @@ Tài liệu này theo dõi lịch sử, nhật ký và các thay đổi phiên b
         - Color-coded dividers for each group.
     - **Placeholder Views**: Tạo 12 view stubs cho tất cả routes mới.
 
+## [0.3.0] - 2026-01-13 (Current)
+
+### Trạng Thái
+- **Giai đoạn**: Refactoring
+- **Thay đổi lớn**: Loại bỏ tính năng thừa, hợp nhất Models, chuẩn hóa UI tiếng Anh.
+
+### Thay đổi
+- **Loại bỏ (Deprecated)**:
+    - Tính năng "My Product" (Code & UI).
+    - Tính năng "Auto Prompt Wizard" (Code & UI).
+- **Hợp nhất (Merge)**:
+    - "Model Library" và "Model Presets" thành một tính năng duy nhất "Model Presets".
+    - User và Admin dùng chung Controller `ModelPresetController` (User read-only).
+- **Giao diện (UI/UX)**:
+    - Sidebar: Đổi tên "My Prompts" -> "Prompts", "My Images" -> "Images Library".
+    - Ngôn ngữ: Chuẩn hóa 100% tiếng Anh cho Sidebar và các Label chính.
+- **Tài liệu**: Cập nhật `PROJECT_KNOWLEDGE.md` với quy tắc ngôn ngữ.
+
+### Nhật ký
+- [2026-01-13 11:00] Thực hiện Refactoring theo yêu cầu:
+    - Xóa `ProductController`, `WizardController` và các View liên quan.
+    - Xóa `ModelController` (bản cũ).
+    - Expose `ModelPresetController@index` cho Public User tại route `storage/model-presets`.
+    - Cập nhật Sidebar: Xóa link cũ, thêm link mới, rename label.
+
+## [0.3.1] - 2026-01-13
+
+### Trạng Thái
+- **Mục tiêu**: Hoàn thiện Prompt Creation Workflow.
+- **Tính năng mới**: 3-pane Layout (Image/Wizard/Manual), Gemini Integration (Text & Vision), Settings System.
+
+### Thay đổi
+- **Backend**:
+    - `GeneratePromptUseCase`: Logic gọi Gemini AI.
+    - `PromptController`: API `generate` và Controller cho view mới.
+    - `Setting`: Model & Migration lưu cấu hình hệ thống (Gemini API Key).
+    - `GeminiClient`: Cập nhật lấy API Key từ DB.
+- **Frontend**:
+    - `create.blade.php`: Viết lại hoàn toàn với Alpine.js (3 tabs, AJAX, Preview).
+    - `index.blade.php`: Thêm thanh Search & Filter.
+
+### Nhật ký
+- [2026-01-13 12:00] triển khai **Prompt Creation Workflow**:
+    - Tạo `GeneratePromptUseCase` xử lý 3 luồng: Image Analysis, Wizard Generation, Manual Optimization.
+    - Setup `settings` table để admin tự quản lý Gemini API Key.
+    - Update UI Create Prompt theo thiết kế 3-pane hiện đại.
+    - Cập nhật tài liệu `BLUEPRINT.md` và `SUMMARY.md`.
+
+## [0.3.2] - 2026-01-13
+
+### Trạng Thái
+- **Mục tiêu**: Nâng cấp chất lượng Prompt Generation (AI Engineering).
+- **Tính năng mới**: Prompt Structure v2, Auto Environment Detection, Generic Product Naming.
+
+### Thay đổi
+- **Prompt Engineering**:
+    - **Separated Output**: Tách biệt kết quả `Image Analysis` (JSON) và `Generated Prompt`.
+    - **Environment Detection**: Gemini tự động phân tích và thêm mô tả chi tiết về surface, background, props, lighting.
+    - **Model vs Product Mode**: Tự động phát hiện ảnh có người mẫu hay không để điều chỉnh cấu trúc prompt.
+    - **Reusability**: Sử dụng tên sản phẩm chung (generic product type) thay vì mô tả màu sắc cụ thể, giúp prompt có thể tái sử dụng.
+- **UI/UX**:
+    - Hiển thị phần "Image Analysis" tách biệt trong bảng kết quả.
+    - Fix lỗi hiển thị `[object Object]` cho Analysis.
+
+## [0.3.3] - 2026-01-13
+
+### Trạng Thái
+- **Mục tiêu**: Hoàn thiện Prompt Management & Image Integration.
+- **Tính năng mới**: Advanced Search/Filter, CRUD Actions, Image Gallery Integration.
+
+### Thay đổi
+- **Prompt Management**:
+    - **Search & Filter**: Tìm kiếm theo tên/prompt, lọc theo Category, lọc theo Favorite.
+    - **Sorting**: Sắp xếp theo Mới nhất/Cũ nhất/A-Z/Z-A.
+    - **Actions**:
+        - **Duplicate**: Nhân bản prompt.
+        - **Copy**: Sao chép nội dung prompt vào clipboard.
+        - **Delete**: Xóa prompt.
+        - **Edit**: Sửa prompt (sử dụng lại giao diện Create với dữ liệu cũ).
+- **Image Integration**:
+    - **Prompt Images**: Lưu hình ảnh tham chiếu của prompt vào Database.
+    - **Image Library Sync**: Tự động lưu ảnh upload từ Prompt Creation vào `Image Library` với tag tương ứng.
+    - **Gallery View**: Hiển thị ảnh thumbnails trong danh sách Prompt.
+- **UI/UX**:
+    - **Toast Notifications**: Thông báo trạng thái (Copy success, Saved, etc.).
+    - **Layout**: Grid hiển thị Prompt kèm hình ảnh hiện đại.
+
+### Nhật ký
+- [2026-01-13 14:00] Nâng cấp **Prompt Management**:
+    - Cập nhật `PromptController` logic search, filter, sort.
+    - Thêm route `duplicate` và logic xử lý.
+    - Update `index.blade.php` với bộ lọc và layout mới.
+- [2026-01-13 15:00] Tích hợp **Image Library**:
+    - Migration: Thêm `image_path` vào bảng `saved_prompts`.
+    - Logic: Lưu ảnh vào `ImageLibrary` model khi lưu prompt.
+    - Update form `Create` hỗ trợ Edit Mode (PUT method).
+- [2026-01-13 17:00] **Refactor Image Storage System**:
+    - Centralize Storage: Chuyển toàn bộ ảnh upload về `storage/app/public/prompts/`.
+    - Symlink Fix: `php artisan storage:link` để fix lỗi 404 image display.
+    - Image Library: Chuyển sang chế độ **Display Only** (Bỏ nút Upload). Ảnh được sync tự động từ Prompt Creation.
+
+## [0.3.4] - 2026-01-13
+
+### Trạng Thái
+- **Mục tiêu**: Tinh chỉnh UI/UX và Logic quản lý.
+- **Tính năng mới**: Prompt Method Tracking, Advanced Image Viewer.
+
+### Thay đổi
+- **Prompt Library**:
+    - **Creation Method**: Thêm trường `method` (manual, image, wizard) để theo dõi nguồn gốc prompt.
+    - **UI**: Hiển thị Badge màu (Tag) theo method trên Card. Thêm bộ lọc Method Dropdown.
+    - **Pagination**: Cấu hình 12 items/page.
+- **Image Library**:
+    - **Viewer Integration**: Tích hợp thư viện **Viewer.js** cho trải nghiệm xem ảnh full-screen (Zoom, Rotate, Flip).
+    - **UI**: Thay nút "View Full" mở tab mới bằng Popup Viewer hiện đại.
+    - **Pagination**: Nâng giới hạn lên 20 items/page.
+- **Fixes**:
+    - Sửa lỗi 404 image đường dẫn do xung đột route `storage/prompts` và folder `storage/prompts`. Renamed folder thành `prompt-images`.
+
+### Nhật ký
+- [2026-01-13 18:00] **UI Enhancements**:
+    - Migration: Thêm column `method` vào bảng `saved_prompts`.
+    - Update Logic: `PromptController` lưu method từ tab active của Create Form.
+    - Frontend:
+        - `create.blade.php`: Bind active tab to hidden input.
+        - `index.blade.php` (Prompts): Add Method Filter & Tags.
+        - `index.blade.php` (Images): Integrate Viewer.js CDN & Script.
+    - Config: Set pagination 12 (Prompts) & 20 (Images).

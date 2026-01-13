@@ -79,22 +79,7 @@
             <h3 class="text-lg font-bold text-gray-900 dark:text-white">Quick Actions</h3>
             
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <!-- Action: New Prompt -->
-                <a href="{{ route('features.wizard.index') }}" class="group relative bg-white dark:bg-zinc-900 p-6 rounded-2xl border border-gray-100 dark:border-zinc-800 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col justify-between h-48 overflow-hidden">
-                    <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                         <svg class="w-24 h-24 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-                    </div>
-                    <div class="relative z-10">
-                        <div class="w-12 h-12 bg-indigo-50 dark:bg-indigo-900/30 rounded-xl flex items-center justify-center text-indigo-600 dark:text-indigo-400 mb-4 group-hover:scale-110 transition-transform">
-                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.384-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>
-                        </div>
-                        <h4 class="text-lg font-bold text-gray-900 dark:text-white group-hover:text-indigo-600 transition-colors">Auto Prompt Wizard</h4>
-                        <p class="text-sm text-gray-500 dark:text-gray-400 mt-2">Create professional prompts in 5 simple steps.</p>
-                    </div>
-                    <div class="mt-4 flex items-center text-indigo-600 font-medium text-sm group-hover:translate-x-1 transition-transform">
-                        Start Now <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
-                    </div>
-                </a>
+                <!-- REMOVED Auto Prompt Wizard -->
 
                 <!-- Action: Batch Processing -->
                 <a href="{{ route('features.batch.index') }}" class="group relative bg-white dark:bg-zinc-900 p-6 rounded-2xl border border-gray-100 dark:border-zinc-800 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col justify-between h-48 overflow-hidden grayscale hover:grayscale-0">
@@ -134,7 +119,7 @@
                     </li>
                     @empty
                     <li class="px-6 py-8 text-center text-gray-500 dark:text-gray-400 text-sm">
-                        No prompts yet. <a href="{{ route('features.wizard.index') }}" class="text-indigo-600 font-semibold hover:underline">Create your first one!</a>
+                        No prompts yet. <a href="{{ route('storage.prompts.create') }}" class="text-indigo-600 font-semibold hover:underline">Create your first one!</a>
                     </li>
                     @endforelse
                 </ul>
