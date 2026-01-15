@@ -209,3 +209,138 @@ Tài liệu này theo dõi lịch sử, nhật ký và các thay đổi phiên b
         - `index.blade.php` (Prompts): Add Method Filter & Tags.
         - `index.blade.php` (Images): Integrate Viewer.js CDN & Script.
     - Config: Set pagination 12 (Prompts) & 20 (Images).
+    - **Removal**: Removed "Product Staging" feature (Code & UI).
+
+## [0.3.5] - 2026-01-14
+
+### Trạng Thái
+- **Mục tiêu**: Public tính năng Products Virtual.
+- **Tính năng mới**: Products Virtual (Virtual Try-On Workflow).
+
+### Thay đổi
+- **Products Virtual**:
+    - **Workflow**: Upload ảnh Model + Product -> Gemini phân tích -> Fal.ai ghép ảnh (Edit Image).
+    - **Features**: 
+        - Quota Tracking (Daily/Total).
+        - Gemini Vision Analysis (prompt generation).
+        - Fal.ai Integration (fal-ai/gpt-image-1/edit-image).
+        - Save result to Image Library.
+    - **UI**: Giao diện 2 cột (Upload vs Result), Preview ảnh, Download options.
+
+### Nhật ký
+- [2026-01-14 10:00] **Documenting Products Virtual**:
+    - Tính năng đã được implement hoàn chỉnh với Controller `ProductsVirtualController` và View `features/products-virtual/index`.
+    - Sử dụng `FalAiClient` mới nhất và `GeminiClient` để xử lý hybrid workflow.
+    - Tích hợp hệ thống Quota để giới hạn lượt dùng của User.
+
+## [0.3.6] - 2026-01-14
+
+### Trạng Thái
+- **Mục tiêu**: Stabilize & Enhance Products Virtual Feature.
+- **Tính năng mới**: Prompt Library Integration, Advanced Prompt Logic (Art Director Mode).
+
+### Thay đổi
+- **Integration**:
+    - **Prompt Library Selector**: Tích hợp tính năng chọn Prompt từ thư viện ngay tại màn hình Products Virtual.
+    - **API**: Thêm tính năng trả về JSON cho `PromptController@index` để phục vụ AJAX fetch.
+- **AI Engineering**:
+    - **Art Director Prompt**: Nâng cấp System Prompt của Gemini lên level "Art Director".
+    - **Templates**: Tách biệt 2 template rõ ràng: "Fashion Model" (Có người) và "Product Only" (Tĩnh vật).
+- **Fixes**:
+    - **Route Error**: Sửa lỗi 500 Route not defined do typo `storage.storage`.
+    - **Path Resolution**: Fix lỗi không tìm thấy file ảnh trong Dev Mode do vấn đề `storage/app/private`. Sử dụng `Storage::disk('local')->path()` chuẩn.
+    - **Deadlock**: Fix lỗi treo tiến trình PHP khi tải ảnh local qua HTTP URL.
+
+### Nhật ký
+- [2026-01-14 14:00] **Debugging & Stabilization**:
+    - Phát hiện và xử lý vấn đề Laravel Storage Path (Private vs Public). Update Controller dùng Absolute Path.
+    - Fix lỗi Gemini trả về prompt "rác" do không đọc được ảnh input.
+- [2026-01-14 15:00] **AI Logic Upgrade**:
+    - Refine System Prompt trong `GeminiClient`: Thêm yêu cầu bắt buộc về Camera Angle, Lighting, Micro-details.
+    - Implement Few-Shot Learning: Đưa ví dụ chuẩn vào prompt để định hướng style.
+- [2026-01-14 15:45] **Component Integration**:
+    - Implement Modal "Prompt Library" với giao diện UI Pro Max (Glassmorphism, Grid).
+    - Kết nối Frontend Products Virtual với Backend Prompts API.
+    - Hoàn tất test luồng Select Prompt -> Bypass Analyze -> Ready to Generate.
+
+## [0.3.7] - 2026-01-14
+
+### Trạng Thái
+- **Mục tiêu**: Fix bugs & Standardize API for Products Virtual.
+- **Tính năng mới**: Fal.ai API Compatible Debug Info.
+
+### Thay đổi
+- **Products Virtual Controller**:
+    - **Fix "Selected Prompt" Bug**: Sửa lỗi logic validation (bắt buộc `model_image` khi đã có `prompt_id`) và xử lý null image path.
+    - **Fal.ai API Standard**: Cập nhật cấu trúc `debug_info` trả về đúng chuẩn API của Fal.ai (`fal_api_request` object) để dễ dàng debug và integration.
+    - **Dev Mode Enhancement**: Mock response trả về đầy đủ cấu trúc như Production.
+
+### Nhật ký
+- [2026-01-14 18:30] **Bug Fixes & Standardization**:
+    - Fix lỗi 500 khi chọn Prompt từ Library do validation rules.
+    - Cập nhật hàm `analyze` và `generate` trả về `debug_info` có key `fal_api_request` chứa đầy đủ: `prompt`, `image_urls`, `image_size`, `background`, `quality`, `input_fidelity`, `num_images`, `output_format`.
+    - Verify thành công luồng: Select Prompt -> Upload Product -> Submit -> View Debug Info (Correct JSON Structure).
+
+## [0.3.8] - 2026-01-15
+
+### Trạng Thái
+- **Mục tiêu**: Upgrade AI Model to latest version.
+- **Tính năng mới**: Fal.ai GPT-Image 1.5 Integration.
+
+### Thay đổi
+- **API Client**:
+    - Upgrade endpoint từ `gpt-image-1` lên `gpt-image-1.5`.
+    - Update Parameters: `aspect_ratio` -> `image_size`. Support `input_fidelity`.
+    - Fix `image_urls`: Chuyển từ Object sang List of Strings chuẩn API.
+### Thay đổi
+- **API Client**:
+    - Upgrade endpoint từ `gpt-image-1` lên `gpt-image-1.5`.
+    - Update Parameters: `aspect_ratio` -> `image_size`. Support `input_fidelity`.
+    - Fix `image_urls`: Chuyển từ Object sang List of Strings chuẩn API.
+- **ProductsVirtualController**:
+    - Update `generate`: Valid & map `num_images` (Max 4). Force `num_images=1` for regular Users.
+    - Update `generate` & `analyze`: Map `size_ratio` (1:1...) sang `image_size` (1024x1024...).
+    - Standardize Debug Info JSON.
+- **Frontend (Blade/Alpine)**:
+    - Add **Number of Images Slider** (1-4).
+    - Logic: Chỉ hiện Slider cho Admin/Manager. User mặc định 1.
+
+### Nhật ký
+- [2026-01-15 11:45] **Add Number of Images Slider**:
+    - Thêm Slider chọn số lượng ảnh (1-4) vào giao diện.
+    - Role-based: Admin/Manager mới thấy Slider, User ẩn.
+    - Backend: Force `num_images=1` nếu không phải Admin/Manager. Pass `num_images` sang FalAI.
+- [2026-01-15 11:30] **Upgrade to GPT-Image 1.5**:
+    - Thực hiện theo request user, đối chiếu với `GPT-Image 1.md`.
+    - Fix format `image_urls` bị sai object trong bản cũ.
+    - Verified bằng Browser Subagent: Debug Info hiển thị đúng Endpoint 1.5 và Parameters.
+- [2026-01-15 12:30] **Library Access Control**:
+    - **Prompt Library**: Chỉ Admin hoặc Report Owner mới có quyền Edit/Delete. User khác chỉ View/Copy/Duplicate.
+    - **Image Library**: Áp dụng quy tắc tương tự cho hành động Delete.
+    - **UI**: Ẩn nút Edit/Delete đối với user không có quyền.
+- [2026-01-15 12:45] **Fix Access Control Logic**:
+    - **Duplication**: Fix lỗi nhân bản vẫn giữ Owner cũ. Logic mới: Người nhân bản sẽ là Owner của Prompt mới (Full Rights).
+    - **Admin Access**: Verified và đảm bảo logic `Owner OR Admin` hoạt động đúng. Bất kỳ Admin nào cũng có quyền Edit/Delete Prompt của người khác.
+- [2026-01-15 12:50] **UI Enhancement**:
+    - **Prompt Card**: Thêm hiển thị tên người tạo (Creator Name) trên Card, cạnh badge Method. Giúp nhận diện chủ sở hữu Prompt dễ dàng hơn.
+- [2026-01-15 13:00] **Bug Fix**:
+    - **Image Library**: Fix lỗi hiển thị ảnh "gãy" (Broken Image) do record mồ côi (Orphan Record).
+    - **Cause**: Khi xóa Prompt, file ảnh bị xóa nhưng entry trong Image Library vẫn còn.
+    - **Solution**: Update logic `destroy` trong `PromptController` để xóa đồng bộ entry Image Library tương ứng. Đã xóa record lỗi ID 5 cho User.
+- [2026-01-15 13:10] **UI Enhancement**:
+    - **Image Library**: Thêm hiển thị tên người tạo (Creator Name) trên thẻ ảnh (góc dưới bên trái), tương tự như Prompt Card. Sử dụng badge màu xanh dương nhạt để đồng bộ giao diện.
+- [2026-01-15 13:45] **Bug Fix**:
+    - **Image Library Access**: Fix lỗi 403/404 khi truy cập `storage/images`.
+    - **Cause**: Xung đột giữa Route `/storage/images` và thư mục vật lý `public/storage/images`.
+    - **Solution**: Đổi URL route thành `/storage/gallery` (vẫn giữ nguyên tên route `storage.images.*` để không ảnh hưởng code cũ). Update Sidebar link tự động nhận diện URL mới.
+- [2026-01-15 14:05] **[VERIFICATION] Fal.ai Integration Ready**
+  - Verified `products_virtual_dev_mode` is set to `false`.
+  - Confirmed `fal_api_key` is configured.
+  - Review `FalAiClient` and `ProductsVirtualController` logic.
+  - Identified upload error "Failed to upload product image to Fal.ai".
+- **[FIX] Fal.ai Storage Upload**
+  - Updated `FalAiClient::uploadToStorage` to use `https://fal.media/files/upload`.
+  - Removed outdated endpoints that were returning 404/405.
+  - Removed Base64 fallback mechanism to prevent MySQL "server gone away" errors with large payloads.
+  - Verified fix with `test_fal_upload.php`.
+```

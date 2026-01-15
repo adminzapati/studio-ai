@@ -125,5 +125,7 @@
             </svg>
             <span x-text="message"></span>
         </div>
+
+        @stack('scripts')
     </body>
 </html>

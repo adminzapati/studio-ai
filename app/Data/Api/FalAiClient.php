@@ -18,7 +18,118 @@ class FalAiClient
 
     public function __construct()
     {
-        $this->apiKey = config('services.fal.api_key', '');
+        $this->apiKey = \App\Models\Setting::get('fal_api_key', config('services.fal.api_key', ''));
+    }
+
+    /**
+     * Upload image to Fal.ai Storage
+     * 
+     * Strategy:
+     * 1. Try Fal.media generic upload (observed 200 OK in logs)
+     * 2. Fallback to older upload endpoints
+     * 3. CRITICAL FALLBACK: Use Base64 Data URI if file size allows (< 10MB)
+     * 
+     * @param string $filePath Absolute path to local file
+     * @return string|null Public URL of uploaded file
+     */
+    public function uploadToStorage(string $filePath): ?string
+    {
+        AppLogger::aiCall('FalAi', 'uploadToStorage', ['file' => basename($filePath)]);
+
+        $fileName = basename($filePath);
+        $fileContents = file_get_contents($filePath);
+        $fileSize = strlen($fileContents);
+        $contentType = mime_content_type($filePath) ?: 'image/png';
+        
+        AppLogger::info('FalAi Upload details', [
+            'file' => $fileName,
+            'mime' => $contentType, 
+            'size' => $fileSize
+        ]);
+
+        // Endpoints to try (Prioritize standard global endpoint)
+        $endpoints = [
+            'https://fal.media/files/upload',          // Standard
+            // 'https://fal.media/files/kangaroo/upload', // Removed: suspected of enforcing .bin extension
+        ];
+
+        foreach ($endpoints as $endpoint) {
+            try {
+                // Fal.media sometimes uses different auth or no auth for temp files
+                // We'll try with standard Fal auth first
+                $response = Http::timeout(60)
+                    ->withHeaders([
+                        'Authorization' => "Key {$this->apiKey}",
+                        'Accept' => 'application/json',
+                    ])
+                    ->attach('file', $fileContents, $fileName, ['Content-Type' => $contentType])
+                    ->post($endpoint);
+
+                if ($response->successful()) {
+                    $data = $response->json();
+                    
+                    // Log partial success for debugging
+                    AppLogger::info('FalAi partial upload response', ['body' => $data]);
+
+                    // Map known response fields
+                    $fileUrl = $data['access_url'] ?? $data['file_url'] ?? $data['url'] ?? null;
+                    
+                    if ($fileUrl) {
+                        return $fileUrl;
+                    }
+                }
+            } catch (\Exception $e) {
+                // Ignore and try next
+            }
+        }
+
+        // --- FALLBACK: BASE64 DATA URI ---
+        // REMOVED: Base64 fallback caused MySQL "server gone away" errors.
+        // Direct upload is now working correctly via generic endpoints.
+        
+        AppLogger::error('FalAi Storage Upload failed after all attempts');
+        return null;
+    }
+
+    /**
+     * Edit image using GPT Image 1.5
+     * 
+     * @param string $prompt The edit instruction
+     * @param array $imageUrls Array of public URLs (List of strings)
+     * @param array $options Additional options (image_size, quality, format, etc.)
+     */
+    public function editImage(string $prompt, array $imageUrls, array $options = []): ?array
+    {
+        AppLogger::aiCall('FalAi', 'editImage', ['prompt' => $prompt]);
+        
+        try {
+            $response = Http::timeout(120)->withHeaders([
+                'Authorization' => "Key {$this->apiKey}",
+                'Content-Type' => 'application/json',
+            ])->post("{$this->baseUrl}/fal-ai/gpt-image-1.5/edit", [
+                'prompt' => $prompt,
+                'image_urls' => $imageUrls,
+                'image_size' => $options['image_size'] ?? 'auto',
+                'background' => $options['background'] ?? 'auto',
+                'quality' => $options['quality'] ?? 'high',
+                'input_fidelity' => $options['input_fidelity'] ?? 'high',
+                'num_images' => $options['num_images'] ?? 1,
+                'output_format' => $options['format'] ?? 'png',
+            ]);
+            
+            if ($response->successful()) {
+                return $response->json();
+            }
+            
+            AppLogger::error('FalAi EditImage error', [
+                'status' => $response->status(),
+                'body' => $response->body()
+            ]);
+            return null;
+        } catch (\Exception $e) {
+            AppLogger::error('FalAi EditImage exception', ['message' => $e->getMessage()]);
+            return null;
+        }
     }
 
     /**

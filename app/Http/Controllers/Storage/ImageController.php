@@ -12,7 +12,7 @@ class ImageController extends Controller
      */
     public function index()
     {
-        $images = \App\Models\ImageLibrary::where('user_id', auth()->id())
+        $images = \App\Models\ImageLibrary::with('user')
             ->latest()
             ->paginate(20);
         
@@ -58,7 +58,7 @@ class ImageController extends Controller
      */
     public function show(string $id)
     {
-        $image = \App\Models\ImageLibrary::where('user_id', auth()->id())->findOrFail($id);
+        $image = \App\Models\ImageLibrary::findOrFail($id);
         return view('storage.images.show', compact('image'));
     }
 
@@ -84,7 +84,12 @@ class ImageController extends Controller
      */
     public function destroy(string $id)
     {
-        $image = \App\Models\ImageLibrary::where('user_id', auth()->id())->findOrFail($id);
+        $image = \App\Models\ImageLibrary::findOrFail($id);
+        
+        // Check permission: Owner or Admin
+        if (auth()->id() !== $image->user_id && !auth()->user()->hasRole('Admin')) {
+            abort(403, 'Unauthorized action.');
+        }
         
         // Delete file from storage
         \Illuminate\Support\Facades\Storage::disk('public')->delete($image->path);

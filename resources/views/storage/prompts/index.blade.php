@@ -155,6 +155,14 @@
                                     <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium {{ $methodClass }} mt-1 ml-1">
                                         {{ $methodLabel }}
                                     </span>
+                                    @if($prompt->user)
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 mt-1 ml-1 min-w-[60px] justify-center" title="Creator">
+                                            <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                                            </svg>
+                                            {{ $prompt->user->name }}
+                                        </span>
+                                    @endif
                                 </div>
                             </div>
 
@@ -201,23 +209,26 @@
 
 
 
-                                    <!-- Edit Button -->
-                                    <a href="{{ route('storage.prompts.edit', $prompt) }}" class="p-2 text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 rounded-full hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition-colors" title="Edit">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path>
-                                        </svg>
-                                    </a>
-
-                                    <!-- Delete Button -->
-                                    <form action="{{ route('storage.prompts.destroy', $prompt) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this prompt?');">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="p-2 text-gray-400 hover:text-red-600 dark:hover:text-red-400 rounded-full hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors" title="Delete">
+                                    <!-- Edit & Delete Buttons (Owner or Admin) -->
+                                    @if(auth()->id() === $prompt->user_id || auth()->user()->hasRole('Admin'))
+                                        <!-- Edit Button -->
+                                        <a href="{{ route('storage.prompts.edit', $prompt) }}" class="p-2 text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 rounded-full hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition-colors" title="Edit">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path>
                                             </svg>
-                                        </button>
-                                    </form>
+                                        </a>
+
+                                        <!-- Delete Button -->
+                                        <form action="{{ route('storage.prompts.destroy', $prompt) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this prompt?');">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="p-2 text-gray-400 hover:text-red-600 dark:hover:text-red-400 rounded-full hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors" title="Delete">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                                </svg>
+                                            </button>
+                                        </form>
+                                    @endif
                                 </div>
                             </div>
                             

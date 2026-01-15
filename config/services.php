@@ -35,4 +35,8 @@ return [
         ],
     ],
 
+    'fal' => [
+        'api_key' => env('FAL_API_KEY'),
+    ],
+
 ];

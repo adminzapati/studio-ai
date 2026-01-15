@@ -2,7 +2,7 @@
 ## AI-Powered Fashion E-Commerce Image Processing Platform
 
 > **Version:** 2.0.0  
-> **Last Updated:** 2026-01-13  
+> **Last Updated:** 2026-01-14  
 > **Status:** Active Development
 
 ---
@@ -36,7 +36,8 @@ Three fixed roles managed via `spatie/laravel-permission`:
 | System Settings | ✅ | ❌ | ❌ |
 | User Management | ✅ | ❌ | ❌ |
 | Model Presets (Edit) | ✅ | ✅ | 👁️ View |
-| Own Data (Prompts/Images) | ✅ All | ✅ All | ✅ Own |
+| Prompt/Image Lib (View) | ✅ All | ✅ All | ✅ All |
+| Prompt/Image Lib (Edit/Del)| ✅ All | ✅ Own | ✅ Own |
 | Generative Features | ✅ | ✅ | ✅ |
 | View History | ✅ All | ✅ All | ✅ Own |
 
@@ -200,7 +201,7 @@ app/
   /batch                  Batch Processor
   /beautifier             Product Beautifier
   /staging                Product Staging
-  /virtual-model          Virtual Try-On
+  /products-virtual       Products Virtual (Virtual Try-On)
 
 /storage/*              -> User Resources
   /prompts                Prompts Library
@@ -240,13 +241,40 @@ Place products in realistic context backgrounds.
 2. Choose background (Upload image OR Generate via Prompt).
 3. AI composites product into scene.
 
-### 6.4 Virtual Model (P2)
-Dress AI-generated models with clothing items.
+### 6.4 Products Virtual (P1) ✅ Implemented
+Virtual Try-On feature cho phép người dùng "mặc thử" sản phẩm lên model/scene.
 
 **Workflow:**
-1. Upload clothing image (Flat lay or Mannequin).
-2. Select Model Preset (Gender, Ethnicity, Pose).
-3. AI performs virtual try-on.
+1. Upload Model Image (người mẫu hoặc scene)
+2. Upload Product Images (tối đa 4 ảnh từ các góc độ khác nhau)
+3. Click "Upload Model & Product" → Hệ thống upload lên Fal.ai Storage
+4. Gemini AI phân tích ảnh và tạo prompt mô tả
+5. User review và refine prompt (optional)
+6. Chọn parameters (Size/Ratio, Background, Quality, Format)
+7. Click "Generate" → Fal.ai GPT Image 1 Edit tạo kết quả
+8. Preview result → Download hoặc Save to Library
+
+**Technical Details:**
+- **Fal.ai API Domains**: 
+    - **Sync**: `https://fal.run/{model_id}` (Short tasks)
+    - **Queue**: `https://queue.fal.run/{model_id}` (Long tasks/Generations)
+    - **Storage**: `https://fal.media/files/upload` (Generic upload)
+    - **Warning**: Do NOT use `api.fal.ai` (Does not exist).
+- **Fal.ai Storage API**: Generic upload via `fal.media` to get public URLs. No Base64 fallback (avoids DB size issues).
+- **Gemini AI**: `analyzeImageForProductVirtual()` method
+- **Fal.ai GPT Image 1 Edit**: `editImage()` method via `queue.fal.run` or `fal.run`
+- **Quota System**: Daily/Total limits với admin unlimited
+- **Database**: `products_virtual_jobs`, `user_quotas` tables
+
+**Routes:**
+```
+GET  /features/products-virtual              → index
+POST /features/products-virtual/analyze     → analyze
+POST /features/products-virtual/generate    → generate
+GET  /features/products-virtual/{id}/status → status
+POST /features/products-virtual/{id}/save-to-library → saveToLibrary
+GET  /features/products-virtual/{id}/download → download
+```
 
 ---
 
@@ -260,7 +288,7 @@ STORAGE HUB
 │   ├── Create Workflow:
 │   │   ├── Methods: From Image, Wizard, Manual (Tracked as `method`)
 │   │   └── Process: Input -> Gemini AI -> Review/Edit -> Save
-│   ├── Features: Search, Filter by Category, Favorites
+│   ├── Features: Search, Filter by Category, Favorites, Duplicate (New Ownership)
 │   └── Configuration: Gemini API Key via System Settings
 │
 ├── 🖼️ Images Library

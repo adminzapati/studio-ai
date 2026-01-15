@@ -7,8 +7,8 @@ use Illuminate\Support\Facades\Route;
 // Features Controllers
 use App\Http\Controllers\Features\BatchController;
 use App\Http\Controllers\Features\BeautifierController;
-use App\Http\Controllers\Features\StagingController;
 use App\Http\Controllers\Features\VirtualModelController;
+use App\Http\Controllers\Features\ProductsVirtualController;
 
 // Storage Controllers
 use App\Http\Controllers\Storage\PromptController;
@@ -49,8 +49,17 @@ Route::middleware('auth')->group(function () {
 Route::middleware('auth')->prefix('features')->name('features.')->group(function () {
     Route::get('/batch', [BatchController::class, 'index'])->name('batch.index');
     Route::get('/beautifier', [BeautifierController::class, 'index'])->name('beautifier.index');
-    Route::get('/staging', [StagingController::class, 'index'])->name('staging.index');
     Route::get('/virtual-model', [VirtualModelController::class, 'index'])->name('virtual-model.index');
+    
+    // Products Virtual Feature
+    Route::prefix('products-virtual')->name('products-virtual.')->group(function () {
+        Route::get('/', [ProductsVirtualController::class, 'index'])->name('index');
+        Route::post('/analyze', [ProductsVirtualController::class, 'analyze'])->name('analyze');
+        Route::post('/generate', [ProductsVirtualController::class, 'generate'])->name('generate');
+        Route::get('/{id}/status', [ProductsVirtualController::class, 'status'])->name('status');
+        Route::post('/{id}/save-to-library', [ProductsVirtualController::class, 'saveToLibrary'])->name('save-to-library');
+        Route::get('/{id}/download', [ProductsVirtualController::class, 'download'])->name('download');
+    });
 });
 
 /*
@@ -63,7 +72,15 @@ Route::middleware('auth')->prefix('storage')->name('storage.')->group(function (
     Route::post('prompts/{prompt}/duplicate', [PromptController::class, 'duplicate'])->name('prompts.duplicate');
     Route::post('prompts/{prompt}/toggle-favorite', [PromptController::class, 'toggleFavorite'])->name('prompts.toggle-favorite');
     Route::resource('prompts', PromptController::class);
-    Route::resource('images', ImageController::class);
+    Route::resource('gallery', ImageController::class)->names([
+        'index' => 'images.index',
+        'create' => 'images.create',
+        'store' => 'images.store',
+        'show' => 'images.show',
+        'edit' => 'images.edit',
+        'update' => 'images.update',
+        'destroy' => 'images.destroy',
+    ]);
     // Model Presets (Public Read, Admin Write via Admin Group)
     Route::get('model-presets', [App\Http\Controllers\Admin\ModelPresetController::class, 'index'])->name('model-presets.index');
 });
@@ -88,6 +105,7 @@ Route::middleware(['auth', 'role:Admin'])->prefix('admin')->name('admin.')->grou
     // Settings
     Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
     Route::post('/settings', [SettingsController::class, 'update'])->name('settings.update');
+    Route::post('/settings/clear-temp', [SettingsController::class, 'clearProductsVirtualTemp'])->name('settings.clear-temp');
     
     // Wizard Options
     Route::resource('wizard-options', WizardOptionController::class);

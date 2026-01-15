@@ -57,4 +57,20 @@ class User extends Authenticatable
     {
         return $this->hasMany(ImageLibrary::class);
     }
+
+    /**
+     * Get the user's quota.
+     */
+    public function quota()
+    {
+        return $this->hasOne(UserQuota::class);
+    }
+
+    /**
+     * Get the user's products virtual jobs.
+     */
+    public function productsVirtualJobs()
+    {
+        return $this->hasMany(ProductsVirtualJob::class);
+    }
 }

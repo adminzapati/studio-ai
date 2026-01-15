@@ -22,6 +22,13 @@ class SavedPrompt extends Model
         'is_favorite' => 'boolean',
     ];
 
+    protected $appends = ['image_url'];
+
+    public function getImageUrlAttribute()
+    {
+        return $this->image_path ? \Illuminate\Support\Facades\Storage::url($this->image_path) : null;
+    }
+
     public function user()
     {
         return $this->belongsTo(\App\Models\User::class);

@@ -80,6 +80,8 @@ Dự án sử dụng mô hình 3 Roles cứng:
 1.  **Admin**: Quyền tuyệt đối. Quản lý System Settings, User, và cấu hình AI Wizard.
 2.  **Manager**: Team Leader/Vận hành. Có quyền xem tất cả dữ liệu (View All) để giám sát, chỉnh sửa thư viện hệ thống (System Libs).
 3.  **User**: Nhân viên. Chỉ thao tác trên dữ liệu của chính mình (Own Data) và xem thư viện hệ thống (Read Only).
+    - **Library Access**: User có thể xem/sử dụng/duplicate Prompt & Image của người khác, nhưng **KHÔNG** được phép Edit/Delete (Chỉ Owner/Admin mới có quyền này).
+    - **Duplication Rule**: Khi User A nhân bản prompt của User B, prompt mới thuộc quyền sở hữu của User A (Full Rights).
 
 **Lưu ý Dev**: Khi check quyền trong code, ưu tiên check `ProductPolicy` hoặc `$user->can('permission_name')`, hạn chế check role cứng `$user->hasRole('Admin')` trừ trường hợp đặc biệt.
 
@@ -100,6 +102,43 @@ Rất quan trọng để tránh lỗi Foreign Key:
 - **JSON Fields**: Các trường linh động (Product specs, Prompt wizard data) lưu dạng JSON trong DB thay vì tách bảng con nếu không cần join/query phức tạp.
 - **Tracking**: Mọi Prompt được tạo ra phải lưu rõ nguồn gốc (`method`: manual/image/wizard) để phục vụ Analytics sau này.
 
+### 5.2 Fal.ai Integration Standards (Quan trọng)
+- **Domains**:
+  - **Sync**: `https://fal.run/{model_id}` (Cho task nhanh < 10s)
+  - **Queue**: `https://queue.fal.run/{model_id}` (Cho task AI heavy)
+  - **Storage**: `https://fal.media/files/upload` (Upload file generic)
+  - **WebSocket**: `wss://ws.fal.run/{model_id}` (Realtime)
+  - **Banned**: KHÔNG dùng `api.fal.ai` hoặc `rest.fal.ai` (Domain cũ/không tồn tại).
+- **Storage Upload**:
+  - Luôn dùng `multipart/form-data` upload lên endpoints của Fal.media.
+  - **Base64**: Hạn chế tối đa dùng Base64 cho ảnh lớn (>4MB) để tránh lỗi Database Packet Size. Ưu tiên upload lấy URL.
+- **Queue Handling**: 
+  - Submit request nhận `request_id`.
+  - Poll `status_url` hoặc `response_url` để lấy kết quả (`status: "COMPLETED"`).
+### 4.5 Debug Info API Structure (Standard v1.5)
+Để đảm bảo khả năng debug và integration nhất quán giữa Dev & Prod, API trả về `debug_info` (khi `dev_mode=true`) phải tuân thủ cấu trúc của Fal.ai API Payload (GPT-Image 1.5):
+
+```json
+{
+  "fal_api_request": {
+    "prompt": "String...",
+    "image_urls": [
+      "https://url-to-model-image.com/file.jpg", // Model Image (URL String)
+      "https://url-to-product-image.com/file.png" // Product Image (URL String)
+    ],
+    "image_size": "square_hd", // "square_hd" (1024x1024), "1536x1024", "1024x1536", or "auto"
+    "background": "auto",
+    "quality": "high",
+    "input_fidelity": "high",
+    "num_images": 1,
+    "output_format": "png"
+  }
+}
+```
+- **Development Mode Handling**:
+  - Khi làm việc với file ảnh ở local (`dev_mode=true`), luôn sử dụng Absolute Path (`Storage::disk('local')->path()`) để đọc file.
+  - Tránh dùng HTTP URL (`url()`, `asset()`) để gọi nội bộ (internal curl/get) vì sẽ gây ra loop/deadlock trên PHP Server đơn luồng.
+
 ## 6. Cấu Trúc Routes (Route Structure)
 Theo Spec v1.3 Section 7.1:
 ```
@@ -108,7 +147,6 @@ Theo Spec v1.3 Section 7.1:
 /features/*             -> AI Features (All users)
   /batch                  Batch Processor
   /beautifier             Product Beautifier
-  /staging                Product Staging
   /virtual-model          Virtual Try-on
 
 /storage/*              -> User Resources (All users, own data)
@@ -198,8 +236,13 @@ Khi phát triển/cải thiện giao diện, tuân thủ workflow sau:
 ### Cấu Trúc Prompt Chuẩn (V2)
 Mọi prompt sinh ra cho Fashion/E-commerce phải tuân thủ cấu trúc sau để đảm bảo chất lượng và khả năng tái sử dụng:
 
-**Pattern:**
-`[Photography Style], [Generic Product], [Pose/Context], [Environment], [Lighting+Shadows], [Camera Angle], [Quality Modifiers]. --ar [Aspect Ratio]`
+**Pattern (2 Templates - Art Director Approved):**
+
+**Type A: Model Shot (Có Người)**
+`Fashion product photography, [Model Description] wearing [Generic Product], [Pose/Action], [Detailed Environment & Props], [Lighting & Atmosphere], [Camera Angle], [Quality Modifiers] --ar [Ratio]`
+
+**Type B: Product Only (Tĩnh Vật)**
+`Product photography, [Generic Product], [Placement], [Detailed Environment & Props], [Lighting & Atmosphere], [Camera Angle], [Quality Modifiers] --ar [Ratio]`
 
 ### Các Quy Tắc Quan Trọng
 1. **Generic Naming**: KHÔNG mô tả màu sắc/chi tiết sản phẩm cụ thể (ví dụ: dùng "sandals" thay vì "black leather sandals"). Để Stable Diffusion/Flux tự fill hoặc dùng ControlNet.

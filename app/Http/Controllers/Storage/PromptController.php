@@ -15,7 +15,7 @@ class PromptController extends Controller
      */
     public function index(Request $request)
     {
-        $query = \App\Models\SavedPrompt::where('user_id', auth()->id());
+        $query = \App\Models\SavedPrompt::query();
 
         // Text Search
         if ($request->filled('search')) {
@@ -60,7 +60,14 @@ class PromptController extends Controller
         }
 
         $prompts = $query->paginate(12)->withQueryString();
-        $categories = \App\Models\SavedPrompt::where('user_id', auth()->id())->distinct()->pluck('category')->filter()->values();
+        $categories = \App\Models\SavedPrompt::distinct()->pluck('category')->filter()->values();
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'prompts' => $prompts,
+                'categories' => $categories
+            ]);
+        }
 
         return view('storage.prompts.index', compact('prompts', 'categories'));
     }
@@ -157,7 +164,7 @@ class PromptController extends Controller
      */
     public function show(string $id)
     {
-        $prompt = \App\Models\SavedPrompt::where('user_id', auth()->id())->findOrFail($id);
+        $prompt = \App\Models\SavedPrompt::findOrFail($id);
         return view('storage.prompts.show', compact('prompt'));
     }
 
@@ -166,7 +173,13 @@ class PromptController extends Controller
      */
     public function edit(string $id)
     {
-        $prompt = \App\Models\SavedPrompt::where('user_id', auth()->id())->findOrFail($id);
+        $prompt = \App\Models\SavedPrompt::findOrFail($id);
+        
+        // Check permission: Owner or Admin
+        if (auth()->id() !== $prompt->user_id && !auth()->user()->hasRole('Admin')) {
+            abort(403, 'Unauthorized action.');
+        }
+
         // Reuse create view but pass prompt data
         return view('storage.prompts.create', compact('prompt'));
     }
@@ -176,7 +189,12 @@ class PromptController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        $prompt = \App\Models\SavedPrompt::where('user_id', auth()->id())->findOrFail($id);
+        $prompt = \App\Models\SavedPrompt::findOrFail($id);
+
+        // Check permission: Owner or Admin
+        if (auth()->id() !== $prompt->user_id && !auth()->user()->hasRole('Admin')) {
+            abort(403, 'Unauthorized action.');
+        }
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
@@ -227,10 +245,18 @@ class PromptController extends Controller
      */
     public function destroy(string $id)
     {
-        $prompt = \App\Models\SavedPrompt::where('user_id', auth()->id())->findOrFail($id);
+        $prompt = \App\Models\SavedPrompt::findOrFail($id);
+
+        // Check permission: Owner or Admin
+        if (auth()->id() !== $prompt->user_id && !auth()->user()->hasRole('Admin')) {
+            abort(403, 'Unauthorized action.');
+        }
         
         if ($prompt->image_path) {
             \Illuminate\Support\Facades\Storage::disk('public')->delete($prompt->image_path);
+            
+            // Also remove from Image Library to prevent orphans
+            \App\Models\ImageLibrary::where('path', $prompt->image_path)->delete();
         }
         
         $prompt->delete();
@@ -243,10 +269,11 @@ class PromptController extends Controller
      */
     public function duplicate(string $id)
     {
-        $original = \App\Models\SavedPrompt::where('user_id', auth()->id())->findOrFail($id);
+        $original = \App\Models\SavedPrompt::findOrFail($id);
         
         $newPrompt = $original->replicate();
         $newPrompt->name = $original->name . ' (Copy)';
+        $newPrompt->user_id = auth()->id(); // Assign to current user
         $newPrompt->created_at = now();
         $newPrompt->updated_at = now();
         
@@ -257,6 +284,14 @@ class PromptController extends Controller
                 $newPath = 'prompt-images/' . uniqid() . '.' . $ext;
                 \Illuminate\Support\Facades\Storage::disk('public')->copy($original->image_path, $newPath);
                 $newPrompt->image_path = $newPath;
+                
+                // Also save entry to Image Library for the new owner
+                \App\Models\ImageLibrary::create([
+                    'user_id' => auth()->id(),
+                    'path' => $newPath,
+                    'type' => 'prompt_reference',
+                    'tags' => ['prompt', $newPrompt->name],
+                ]);
             } catch (\Exception $e) {
                 // If copy fails, just proceed without image
             }
@@ -271,7 +306,7 @@ class PromptController extends Controller
      */
     public function toggleFavorite(string $id)
     {
-        $prompt = \App\Models\SavedPrompt::where('user_id', auth()->id())->findOrFail($id);
+        $prompt = \App\Models\SavedPrompt::findOrFail($id);
         $prompt->update(['is_favorite' => !$prompt->is_favorite]);
         
         return back()->with('success', $prompt->is_favorite ? 'Added to favorites.' : 'Removed from favorites.');

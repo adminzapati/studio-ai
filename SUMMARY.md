@@ -5,7 +5,7 @@
 > Mọi thay đổi về tính năng, workflow so với thiết kế ban đầu (Original Spec) PHẢI được cập nhật vào đây ngay lập tức.
 > **Mục đích**: Source of Truth cho Dev hiện tại & Future Team. Tránh việc tính năng bị "lạc trôi" hoặc code sai lệch so với thực tế.
 
-**Last Updated**: 2026-01-10
+**Last Updated**: 2026-01-14
 **Based on Original Spec**: v1.3
 
 ---
@@ -22,8 +22,8 @@
 | **Storage Hub** | **Model Library** | P1 | ✅ **Done** | Admin-only Management, User Read-only. |
 | **Feature** | **Prompt Creation** | P1 | ✅ **Done** | 3-pane workflow, Edit Mode support, Image Reference storage. |
 | **Feature** | **Batch Processor** | P1 | ⏳ Pending | - |
-| **Feature** | **Product Staging** | P2 | ⏳ Pending | - |
-| **Feature** | **Virtual Model** | P2 | ⏳ Pending | - |
+| **Feature** | **Product Staging** | - | ❌ **Removed** | Feature deprecated and removed. |
+| **Feature** | **Products Virtual** | P1 | ✅ **Enhanced** | Hybrid Workflow, Integrated Prompt Library, Quota System. |
 
 ---
 
@@ -39,9 +39,12 @@
     - Admin sờ được mọi thứ.
 
 ### 2.2 Storage Hub (Sắp triển khai)
-*(Giữ nguyên logic từ Spec v1.3, chưa có thay đổi)*
-- **Prompt Library**: Store prompts with `wizard_data` JSON. Track `creation_method` (Manual/Image/Wizard).
-- **Image Library**: Display Only. Viewer.js integration for Zoom/Rotate.
+*(Giữ nguyên logic từ Spec v1.3, cập nhật Access Control)*
+- **Prompt Library**: Store prompts with `wizard_data` JSON. Track `creation_method`.
+    - **Access Control**: Chỉ Owner & Admin có quyền Edit/Delete.
+    - **Duplication**: Người nhân bản sẽ trở thành **Owner** của bản sao mới (Full Rights). User khác chỉ được View/Use.
+- **Image Library**: Display Only. Viewer.js integration.
+    - **Access Control**: Chỉ Owner & Admin có quyền Delete.
 - **Model Library**: System Models only for now (Admin managed).
 
 ### 2.3 Auto Prompt Wizard
@@ -65,6 +68,15 @@
     - [User] Thêm trường `avatar` trực tiếp vào bảng `users` thay vì tách bảng profile riêng (Simplification).
     - [Admin] Triển khai **User Management** (CRUD, Lock, Assign Roles) vào core system.
 
+- **2026-01-14**:
+    - [Products Virtual] Triển khai tính năng Virtual Try-On với workflow hybrid (Gemini + Fal.ai).
+    - [Fal.ai Storage] Chuyển sang sử dụng Fal.ai Storage API thay vì Base64 Data URL.
+    - [Quota System] Implement user quota tracking với daily/total limits và auto-reset.
+    - [UI/UX] Thêm Alpine.js state machine cho Products Virtual workflow.
+    - [Enhancement] Tích hợp Prompt Library Selector (Modal UI Pro Max).
+    - [Fix] Ổn định hóa quy trình xử lý file local (Dev Mode) và Route Routing.
+    - [Fix] Sửa lỗi workflow "Selected Prompt" và chuẩn hóa Debug Info theo Fal.ai API Standard.
+
 ### 6. Admin Management (New!)
 *   **User Management**:
     *   **List**: Xem danh sách User, tìm kiếm, lọc theo Role.
@@ -79,3 +91,70 @@
     *   **Fix**: Symbolic link repair.
     *   **Viewer**: Integrated Viewer.js for advanced image viewing.
     *   **Method Tracking**: Added `method` field to Prompts (Manual/Image/Wizard).
+    *   **Removal**: Removed "Product Staging" feature to streamline scope.
+
+---
+
+## 4. Products Virtual Feature (New!)
+
+### 4.1 Overview
+**Products Virtual** là tính năng Virtual Try-On cho phép người dùng "mặc thử" sản phẩm lên model/scene.
+
+### 4.2 Workflow
+
+```mermaid
+flowchart TD
+    A[Upload Model Image] --> B[Upload Product Images max 4]
+    B --> C[Click Upload Model & Product]
+    C --> D[Upload to Fal.ai Storage]
+    D --> E[Gemini AI Analyzes Images]
+    E --> F[Display Generated Prompt]
+    F --> G[User Refines Prompt & Parameters]
+    G --> H[Click Generate]
+    H --> I[Fal.ai GPT Image 1 Edit]
+    I --> J{Result}
+    J -->|Success| K[Display Result Preview]
+    J -->|Failed| L[Show Error]
+    K --> M[Download or Save to Library]
+```
+
+### 4.3 Technical Implementation
+
+**Database:**
+- `products_virtual_jobs` - Lưu lịch sử generation jobs
+- `user_quotas` - Tracking quota cho mỗi user
+
+**API Integration:**
+1. **Fal.ai Storage API**: Upload images → Get public URLs
+2. **Gemini AI**: Analyze images → Generate prompt
+3. **Fal.ai GPT Image 1 Edit**: Generate final result
+
+**Quota System:**
+- Daily Limit: Configurable (default: 10)
+- Total Limit: Configurable (default: 100)
+- Admin: Unlimited (-1)
+- Auto-reset: Daily count resets at midnight
+
+**Routes:**
+```
+GET  /features/products-virtual              → index
+POST /features/products-virtual/analyze     → analyze
+POST /features/products-virtual/generate    → generate
+GET  /features/products-virtual/{id}/status → status
+POST /features/products-virtual/{id}/save-to-library → saveToLibrary
+GET  /features/products-virtual/{id}/download → download
+```
+
+### 4.4 Key Features
+- **Fal.ai Storage Integration**: No file size limits, stable URLs
+- **Alpine.js State Machine**: Smooth UI/UX workflow
+- **Quota Management**: Daily/Total limits với admin override
+- **Result Actions**: Download hoặc Save to Library
+
+### 4.5 Fal.ai Logic Update (2026-01-15)
+- **Integration Standard**:
+  - `fal.run` & `queue.fal.run` used for all model interactions.
+  - `fal.media` used for direct file uploads.
+  - `api.fal.ai` is strictly deprecated/banned.
+- **Upload Strategy**: Direct multipart upload prioritized over Base64.
+- **Documentation**: Updated `BLUEPRINT.md` & `PROJECT_KNOWLEDGE.md` to reflect these core architectural rules.
