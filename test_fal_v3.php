@@ -61,6 +61,7 @@ try {
     */
     exit;
 
+    /*
             $response = Http::withHeaders([
                 'Authorization' => "Key $apiKey",
                 'Content-Type' => 'application/json',
@@ -84,6 +85,7 @@ try {
             echo "Error: " . $e->getMessage() . "\n";
         }
     }
+    */
 
     if (!$uploadUrl) {
         echo "All candidates failed.\n";
