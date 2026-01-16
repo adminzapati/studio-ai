@@ -34,11 +34,19 @@ Route::get('/dashboard', function () {
     return view('dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
+Route::get('/guide', [App\Http\Controllers\DocumentationController::class, 'index'])
+    ->middleware(['auth'])
+    ->name('guide.index');
+
 // Profile
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    // Subscription
+    Route::get('/subscription', [App\Http\Controllers\SubscriptionController::class, 'index'])->name('subscription.index');
+    Route::post('/subscription', [App\Http\Controllers\SubscriptionController::class, 'update'])->name('subscription.update');
 });
 
 /*
@@ -47,12 +55,12 @@ Route::middleware('auth')->group(function () {
 |--------------------------------------------------------------------------
 */
 Route::middleware('auth')->prefix('features')->name('features.')->group(function () {
-    Route::get('/batch', [BatchController::class, 'index'])->name('batch.index');
-    Route::get('/beautifier', [BeautifierController::class, 'index'])->name('beautifier.index');
-    Route::get('/virtual-model', [VirtualModelController::class, 'index'])->name('virtual-model.index');
+    Route::get('/batch', [BatchController::class, 'index'])->name('batch.index')->middleware('module:batch');
+    Route::get('/beautifier', [BeautifierController::class, 'index'])->name('beautifier.index')->middleware('module:beautifier');
+    Route::get('/virtual-model', [VirtualModelController::class, 'index'])->name('virtual-model.index')->middleware('module:virtual_model');
     
     // Products Virtual Feature
-    Route::prefix('products-virtual')->name('products-virtual.')->group(function () {
+    Route::prefix('products-virtual')->name('products-virtual.')->middleware('module:products_virtual')->group(function () {
         Route::get('/', [ProductsVirtualController::class, 'index'])->name('index');
         Route::post('/analyze', [ProductsVirtualController::class, 'analyze'])->name('analyze');
         Route::post('/generate', [ProductsVirtualController::class, 'generate'])->name('generate');
@@ -68,10 +76,13 @@ Route::middleware('auth')->prefix('features')->name('features.')->group(function
 |--------------------------------------------------------------------------
 */
 Route::middleware('auth')->prefix('storage')->name('storage.')->group(function () {
-    Route::post('prompts/generate', [PromptController::class, 'generate'])->name('prompts.generate');
-    Route::post('prompts/{prompt}/duplicate', [PromptController::class, 'duplicate'])->name('prompts.duplicate');
-    Route::post('prompts/{prompt}/toggle-favorite', [PromptController::class, 'toggleFavorite'])->name('prompts.toggle-favorite');
-    Route::resource('prompts', PromptController::class);
+    Route::group(['middleware' => 'module:prompts'], function () {
+        Route::post('prompts/generate', [PromptController::class, 'generate'])->name('prompts.generate');
+        Route::post('prompts/{prompt}/duplicate', [PromptController::class, 'duplicate'])->name('prompts.duplicate');
+        Route::post('prompts/{prompt}/toggle-favorite', [PromptController::class, 'toggleFavorite'])->name('prompts.toggle-favorite');
+        Route::resource('prompts', PromptController::class);
+    });
+
     Route::resource('gallery', ImageController::class)->names([
         'index' => 'images.index',
         'create' => 'images.create',
@@ -80,9 +91,12 @@ Route::middleware('auth')->prefix('storage')->name('storage.')->group(function (
         'edit' => 'images.edit',
         'update' => 'images.update',
         'destroy' => 'images.destroy',
-    ]);
+    ])->middleware('module:images');
+
     // Model Presets (Public Read, Admin Write via Admin Group)
-    Route::get('model-presets', [App\Http\Controllers\Admin\ModelPresetController::class, 'index'])->name('model-presets.index');
+    Route::get('model-presets', [App\Http\Controllers\Admin\ModelPresetController::class, 'index'])
+        ->name('model-presets.index')
+        ->middleware('module:model_presets');
 });
 
 /*
@@ -90,7 +104,13 @@ Route::middleware('auth')->prefix('storage')->name('storage.')->group(function (
 | History
 |--------------------------------------------------------------------------
 */
-Route::get('/history', [HistoryController::class, 'index'])->middleware('auth')->name('history.index');
+Route::get('/history', [HistoryController::class, 'index'])
+    ->middleware(['auth', 'module:history'])
+    ->name('history.index');
+
+Route::delete('/history/{activityLog}', [HistoryController::class, 'destroy'])
+    ->middleware(['auth', 'role:Admin'])
+    ->name('history.destroy');
 
 /*
 |--------------------------------------------------------------------------
@@ -111,7 +131,17 @@ Route::middleware(['auth', 'role:Admin'])->prefix('admin')->name('admin.')->grou
     Route::resource('wizard-options', WizardOptionController::class);
     
     // Model Presets (Admin Full Access)
-    Route::resource('model-presets', ModelPresetController::class)->except(['index']);
+    Route::resource('model-presets', ModelPresetController::class)
+        ->except(['index'])
+        ->middleware('module:model_presets');
+
+    // Subscription Requests
+    Route::get('subscription-requests', [App\Http\Controllers\Admin\SubscriptionRequestController::class, 'index'])->name('subscription-requests.index');
+    Route::post('subscription-requests/{subscriptionRequest}/approve', [App\Http\Controllers\Admin\SubscriptionRequestController::class, 'approve'])->name('subscription-requests.approve');
+    Route::post('subscription-requests/{subscriptionRequest}/reject', [App\Http\Controllers\Admin\SubscriptionRequestController::class, 'reject'])->name('subscription-requests.reject');
+
+    // Subscription Plans Management
+    Route::resource('subscription-plans', App\Http\Controllers\Admin\SubscriptionPlanController::class)->only(['index', 'edit', 'update']);
 });
 
 require __DIR__.'/auth.php';

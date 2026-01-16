@@ -8,6 +8,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
 use Spatie\Permission\Models\Role;
+use App\Models\FeatureModule;
+use App\Models\UserModuleOverride;
 
 class UserController extends Controller
 {
@@ -16,8 +18,9 @@ class UserController extends Controller
      */
     public function index()
     {
-        $users = User::with('roles')->latest()->paginate(10);
-        return view('admin.users.index', compact('users'));
+        $users = User::with(['roles', 'activeSubscription.plan'])->latest()->paginate(10);
+        $plans = \App\Models\SubscriptionPlan::orderBy('sort_order')->get();
+        return view('admin.users.index', compact('users', 'plans'));
     }
 
     /**
@@ -68,7 +71,13 @@ class UserController extends Controller
     public function edit(User $user)
     {
         $roles = Role::all();
-        return view('admin.users.edit', compact('user', 'roles'));
+        $modules = FeatureModule::orderBy('sort_order')->get();
+        // Load user's overrides
+        $userOverrides = UserModuleOverride::where('user_id', $user->id)
+            ->pluck('is_enabled', 'feature_module_id')
+            ->toArray();
+
+        return view('admin.users.edit', compact('user', 'roles', 'modules', 'userOverrides'));
     }
 
     /**
@@ -97,6 +106,50 @@ class UserController extends Controller
         $user->save();
 
         $user->syncRoles([$request->role]);
+
+        // Sync Module Overrides
+        if ($request->has('module_overrides')) {
+            foreach ($request->module_overrides as $moduleId => $status) {
+                if ($status === 'default') {
+                    // Remove override (use plan setting)
+                    UserModuleOverride::where('user_id', $user->id)
+                        ->where('feature_module_id', $moduleId)
+                        ->delete();
+                } else {
+                    // Create/Update override
+                    UserModuleOverride::updateOrCreate(
+                        ['user_id' => $user->id, 'feature_module_id' => $moduleId],
+                        ['is_enabled' => $status == '1']
+                    );
+                }
+            }
+        }
+
+        // Manual Credit Adjustment
+        if ($request->filled('manual_credits')) {
+            $newCredits = (int) $request->manual_credits;
+            if ($user->activeSubscription) {
+                 $user->activeSubscription->update(['credits_remaining' => $newCredits]);
+            }
+        }
+
+        // Handle Subscription Plan Change (Force Update)
+        if ($request->filled('subscription_plan_id')) {
+            $user->activeSubscription->update(['status' => 'cancelled']); // End current
+            
+            $newPlan = \App\Models\SubscriptionPlan::find($request->subscription_plan_id);
+            if ($newPlan) {
+                \App\Models\UserSubscription::create([
+                    'user_id' => $user->id,
+                    'subscription_plan_id' => $newPlan->id,
+                    'status' => 'active',
+                    'credits_remaining' => $newPlan->credits_monthly,
+                    'credits_used_this_month' => 0,
+                    'billing_cycle_start' => now(),
+                    'billing_cycle_end' => now()->addMonth(),
+                ]);
+            }
+        }
 
         return redirect()->route('admin.users.index')->with('success', 'User updated successfully.');
     }

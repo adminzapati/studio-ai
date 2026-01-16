@@ -35,11 +35,14 @@ Three fixed roles managed via `spatie/laravel-permission`:
 |------------|:-----:|:-------:|:----:|
 | System Settings | ✅ | ❌ | ❌ |
 | User Management | ✅ | ❌ | ❌ |
+| Manual Credit Adjustment | ✅ | ❌ | ❌ |
 | Model Presets (Edit) | ✅ | ✅ | 👁️ View |
 | Prompt/Image Lib (View) | ✅ All | ✅ All | ✅ All |
 | Prompt/Image Lib (Edit/Del)| ✅ All | ✅ Own | ✅ Own |
 | Generative Features | ✅ | ✅ | ✅ |
 | View History | ✅ All | ✅ All | ✅ Own |
+| Delete History | ✅ | ❌ | ❌ |
+| Approve Registrations | ✅ | ❌ | ❌ |
 
 ---
 
@@ -181,6 +184,11 @@ app/
 |-------|---------|
 | `users` | User accounts with roles |
 | `roles` / `permissions` | Spatie RBAC |
+| `subscription_plans` | Tier configurations (Free, Pro, etc.) |
+| `user_subscriptions` | Active user subscriptions |
+| `subscription_requests` | Pending plan change requests |
+| `credit_transactions` | Credit usage logs |
+| `feature_modules` | Module definitions (toggles) |
 | `saved_prompts` | User's saved prompts |
 | `image_libraries` | User's uploaded/generated images |
 | `model_presets` | AI model presets (Admin managed) |
@@ -409,7 +417,87 @@ GET  /api/jobs/{id}/status     Poll job status
 
 ---
 
-## 10. CHANGELOG
+## 11. REGISTRATION APPROVAL FLOW
+
+### 11.1 Overview
+New user registrations require administrator approval before account activation.
+
+### 11.2 Workflow
+```mermaid
+flowchart TD
+    A[User Submits Registration] --> B[Account Created is_active=false]
+    B --> C[Email Sent to All Admins]
+    C --> D[User Redirected to Login]
+    D --> E[User Attempts Login]
+    E --> F{Account Active?}
+    F -->|No| G[Login Blocked - Pending Approval Message]
+    F -->|Yes| H[Login Success]
+    C --> I[Admin Reviews User]
+    I --> J[Admin Activates Account]
+    J --> H
+```
+
+### 11.3 Technical Implementation
+- **Controller**: `Auth\RegisteredUserController`
+- **Notification**: `App\Notifications\NewUserRegistration`
+- **Login Check**: `App\Http\Requests\Auth\LoginRequest::authenticate()`
+- **Default State**: `is_active = false` on registration
+- **Admin Action**: Toggle `is_active` via Edit User page
+
+---
+
+## 12. UI COMPONENTS
+
+### 12.1 Navigation Bar
+- **Credit Display Badge**:
+  - Location: Top right, before notification bell
+  - Style: Amber theme (`bg-amber-50 dark:bg-amber-900/20`)
+  - Icon: Currency/coin SVG
+  - Responsive: Hidden on small screens (`hidden sm:flex`)
+  - Data Source: `Auth::user()->activeSubscription->credits_remaining`
+
+### 12.2 Authentication Pages
+- **Login Page**:
+  - Layout: `justify-between` footer
+  - Links: Register (left), Forgot Password + Login Button (right)
+- **Registration Flow**:
+  - Success redirect: Login page with status message
+  - Message: "Registration successful! Your account is pending approval by an administrator."
+
+---
+
+## 13. ACTIVITY HISTORY
+
+### 13.1 Features
+- **Image Preview**: Viewer.js integration for full-screen image viewing
+- **Admin Controls**:
+  - View all users' activity
+  - Delete activity entries with associated files
+- **User View**: Limited to own activity only
+
+### 13.2 Routes
+```
+GET    /history                  → index (filtered by role)
+DELETE /history/{activityLog}    → destroy (Admin only)
+```
+
+---
+
+## 14. CHANGELOG
+
+### v0.4.0 (2026-01-16)
+- **Added**: Activity History image preview (Viewer.js)
+- **Added**: Admin delete activity entries
+- **Added**: Manual credit adjustment in User Management
+- **Added**: Registration approval workflow
+- **Added**: Register link on login page
+- **Added**: Credit display badge in navigation
+
+### v2.1.0 (2026-01-16)
+- **Feature**: Credit-based Subscription System.
+- **Feature**: Module Access Control Middleware.
+- **Feature**: Subscription Request Workflow.
+- **UI**: Updated Dashboard & Navigation.
 
 ### v2.0.0 (2026-01-13)
 - **Removed**: My Products feature.

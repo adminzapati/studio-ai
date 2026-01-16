@@ -344,3 +344,73 @@ Tài liệu này theo dõi lịch sử, nhật ký và các thay đổi phiên b
   - Removed Base64 fallback mechanism to prevent MySQL "server gone away" errors with large payloads.
   - Verified fix with `test_fal_upload.php`.
 ```
+
+## [0.4.0] - 2026-01-16
+
+### Trạng Thái
+- **Giai đoạn**: Admin & UX Enhancements
+- **Tính năng mới**: Activity History Admin Controls, Manual Credit Management, Registration Approval Flow
+
+### Thay đổi
+- **Activity History Enhancements**:
+    - **Image Preview**: Tích hợp Viewer.js cho phép xem full-screen image trực tiếp từ Activity Log.
+        - Thêm eye icon overlay khi hover vào thumbnail.
+        - Click icon mở Viewer.js modal với đầy đủ chức năng (Zoom, Rotate, Flip).
+    - **Admin Access Control**: Admin có thể xem activity history của TẤT CẢ users, không chỉ của mình.
+        - Logic: `HistoryController` kiểm tra `hasRole('Admin')` để quyết định query scope.
+    - **Admin Deletion**: Admin có quyền xóa activity entries (bao gồm xóa file thumbnail từ storage).
+        - Route: `DELETE /history/{activityLog}` với middleware `role:Admin`.
+        - UI: Thêm trash icon button (chỉ hiện với Admin).
+
+- **User Management - Manual Credits**:
+    - **Feature**: Admin có thể điều chỉnh thủ công số credits của user.
+    - **Implementation**:
+        - Thêm input "Manual Credits (Current Balance)" trong Edit User page.
+        - Logic: Cập nhật trực tiếp `credits_remaining` trong `UserSubscription`.
+        - UI: Section "Subscription & Credits" hiển thị plan hiện tại và credit input.
+
+- **Registration Approval Flow**:
+    - **Default Inactive**: User đăng ký mới mặc định `is_active = false`.
+    - **Admin Notification**: 
+        - Tạo `NewUserRegistration` notification (Email).
+        - Gửi tới ALL admins khi có user mới đăng ký.
+    - **Login Block**: 
+        - Update `LoginRequest::authenticate()` để check `is_active`.
+        - User inactive bị logout và nhận message: "Your account is pending administrator approval."
+    - **Admin Approval**: Admin kích hoạt tài khoản qua Edit User page (checkbox "Active Account").
+    - **Flow**: Register → Pending → Admin Email → Admin Activate → User Login.
+
+- **UI/UX Improvements**:
+    - **Register Link**: Thêm link "Register" vào footer login page (`justify-between` layout).
+    - **Credit Display**: 
+        - Badge hiển thị credits trong navigation bar (trước notification bell).
+        - Style: Amber theme với coin icon.
+        - Responsive: `hidden sm:flex` (ẩn trên mobile).
+        - Code: Fetch `Auth::user()->activeSubscription->credits_remaining`.
+
+### Nhật ký
+- [2026-01-16 17:20] **Activity History - Image Preview**:
+    - Thêm Viewer.js CDN links vào `history/index.blade.php`.
+    - Implement eye icon overlay với hover effect.
+    - JavaScript: Initialize Viewer trên table body, filter images với class `group`.
+- [2026-01-16 17:25] **Activity History - Admin Controls**:
+    - Update `HistoryController@index`: Admin query ALL, User query own.
+    - Add `destroy` method với file deletion logic.
+    - Route: Add DELETE route với `role:Admin` middleware.
+    - UI: Add delete button column (trash icon) chỉ hiện với Admin.
+- [2026-01-16 17:30] **User Management - Manual Credits**:
+    - Update `Admin\UserController@update`: Handle `manual_credits` input.
+    - Logic: `$user->activeSubscription->update(['credits_remaining' => $newCredits])`.
+    - UI: Add "Subscription & Credits" section trong `admin/users/edit.blade.php`.
+- [2026-01-16 17:35] **Registration Approval Flow**:
+    - Create `app/Notifications/NewUserRegistration.php` (Mail notification).
+    - Update `RegisteredUserController@store`:
+        - Set `is_active = false`.
+        - Remove `Auth::login($user)`.
+        - Send notification to Admins.
+        - Redirect to login với status message.
+    - Update `LoginRequest@authenticate`: Add `is_active` check post-auth.
+- [2026-01-16 17:40] **UI Enhancements**:
+    - Update `auth/login.blade.php`: Add Register link (justify-between layout).
+    - Update `layouts/app.blade.php`: Add credit badge với amber theme.
+

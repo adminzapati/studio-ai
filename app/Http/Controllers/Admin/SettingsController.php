@@ -16,8 +16,6 @@ class SettingsController extends Controller
             'gemini_api_key' => Setting::get('gemini_api_key', ''),
             'fal_api_key' => Setting::get('fal_api_key', ''),
             'products_virtual_dev_mode' => Setting::get('products_virtual_dev_mode', 'false') === 'true',
-            'products_virtual_daily_limit' => Setting::get('products_virtual_daily_limit', '10'),
-            'products_virtual_total_limit' => Setting::get('products_virtual_total_limit', '100'),
         ];
         
         $tempStats = $this->calculateProductsVirtualTempSize();
@@ -31,15 +29,13 @@ class SettingsController extends Controller
             'gemini_api_key' => 'nullable|string',
             'fal_api_key' => 'nullable|string',
             'products_virtual_dev_mode' => 'sometimes|boolean',
-            'products_virtual_daily_limit' => 'nullable|integer|min:1',
-            'products_virtual_total_limit' => 'nullable|integer|min:1',
         ]);
 
         // Handle boolean dev mode setting
         Setting::set('products_virtual_dev_mode', $request->has('products_virtual_dev_mode') ? 'true' : 'false', 'system');
 
         // Handle other settings
-        $stringSettings = ['gemini_api_key', 'fal_api_key', 'products_virtual_daily_limit', 'products_virtual_total_limit'];
+        $stringSettings = ['gemini_api_key', 'fal_api_key'];
         foreach ($stringSettings as $key) {
             if (isset($validated[$key]) && $validated[$key] !== null && $validated[$key] !== '') {
                 Setting::set($key, (string) $validated[$key], 'system');

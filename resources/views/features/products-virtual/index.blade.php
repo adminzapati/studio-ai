@@ -1,10 +1,29 @@
+@php
+    $plan = Auth::user()->activeSubscription?->plan;
+    $planSlug = $plan?->slug ?? 'free';
+    $allowedQualities = match($planSlug) {
+        'free' => ['low'],
+        'starter' => ['low', 'medium'],
+        default => ['low', 'medium', 'high']
+    };
+    // $credits and $isDevMode are passed from controller
+@endphp
+
 <x-app-layout>
     <x-slot name="header">
         <h2 class="font-bold text-2xl text-gray-900 dark:text-white leading-tight">{{ __('Products Virtual') }}</h2>
     </x-slot>
 
     <div x-data="productsVirtualApp()" class="space-y-6">
-        <!-- Quota Display -->
+        <!-- Usage Display -->
+<!-- ... (previous Usage Display code - skipping to avoid redundancy if context is kept, but need to be careful with tool usage. 
+The ReplacementContent must contain the FULL replacement for the TargetContent range. 
+Since I am planning to replace the top of the file AND the App definition at the bottom, I should probably do it in chunks or careful selections.) -->
+
+<!-- Actually, I cannot easily replace separated chunks with one `replace_file_content`. 
+I will use `multi_replace_file_content` which is designed for this. -->
+
+        <!-- Usage Display -->
         <div class="bg-white dark:bg-zinc-900 rounded-2xl border border-gray-100 dark:border-zinc-800 shadow-sm p-4">
             <div class="flex items-center justify-between">
                 <div class="flex items-center gap-4">
@@ -17,19 +36,11 @@
                     </span>
                     @endif
                     <div class="flex items-center gap-2">
-                        <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-                        </svg>
-                        <span class="text-sm text-gray-600 dark:text-gray-400">Daily Quota:</span>
-                        <span class="font-semibold" :class="quota.daily === -1 ? 'text-green-600' : (quota.daily > 0 ? 'text-blue-600' : 'text-red-600')">
-                            <span x-text="quota.daily === -1 ? 'Unlimited' : quota.daily"></span>
-                        </span>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <span class="text-sm text-gray-600 dark:text-gray-400">Total:</span>
-                        <span class="font-semibold" :class="quota.total === -1 ? 'text-green-600' : (quota.total > 0 ? 'text-blue-600' : 'text-red-600')">
-                            <span x-text="quota.total === -1 ? 'Unlimited' : quota.total"></span>
-                        </span>
+                         <div class="p-1.5 rounded-lg bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400">
+                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        </div>
+                        <span class="text-sm text-gray-600 dark:text-gray-400">Credits Remaining:</span>
+                        <span class="font-bold text-lg text-gray-900 dark:text-white" x-text="credits"></span>
                     </div>
                 </div>
                 <!-- Debug Modal Button -->
@@ -40,6 +51,41 @@
                     </svg>
                     View Debug Info
                 </button>
+            </div>
+        </div>
+        
+        <!-- Full Page Loading Overlay -->
+        <div x-show="isProcessing" 
+             style="display: none;"
+             class="fixed inset-0 z-[60] flex items-center justify-center bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md transition-opacity">
+            <div class="text-center max-w-sm mx-auto p-6">
+                <!-- Advanced Loading Animation -->
+                <div class="relative w-24 h-24 mx-auto mb-8">
+                    <div class="absolute inset-0 border-t-4 border-blue-500 rounded-full animate-spin"></div>
+                    <div class="absolute inset-2 border-r-4 border-purple-500 rounded-full animate-spin-reverse"></div>
+                    <div class="absolute inset-4 border-b-4 border-pink-500 rounded-full animate-spin"></div>
+                    
+                    <!-- Center Icon Changes based on action -->
+                    <div class="absolute inset-0 flex items-center justify-center">
+                        <svg x-show="processingType === 'analyzing'" class="w-8 h-8 text-blue-600 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+                        </svg>
+                        <svg x-show="processingType === 'generating'" class="w-8 h-8 text-pink-600 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.384-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/>
+                        </svg>
+                    </div>
+                </div>
+                
+                <h3 class="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-400 dark:to-purple-400 mb-2" x-text="processingTitle"></h3>
+                <p class="text-gray-500 dark:text-gray-400 mb-6" x-text="processingMessage"></p>
+                
+                <!-- Progress Bar -->
+                <div class="w-full bg-gray-200 dark:bg-zinc-700 rounded-full h-2 mb-2 overflow-hidden">
+                    <div class="h-2 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-full transition-all duration-300 relative overflow-hidden" :style="'width: ' + progress + '%'">
+                        <div class="absolute inset-0 bg-white/30 animate-[shimmer_2s_infinite]"></div>
+                    </div>
+                </div>
+                <p class="text-xs text-gray-400 font-mono" x-text="progress + '%'"></p>
             </div>
         </div>
 
@@ -268,8 +314,6 @@
                                     <option value="1:1">Square (1:1)</option>
                                     <option value="2:3">Portrait (2:3)</option>
                                     <option value="3:2">Landscape (3:2)</option>
-                                    <option value="4:3">Standard (4:3)</option>
-                                    <option value="16:9">Wide (16:9)</option>
                                 </select>
                             </div>
                             <div>
@@ -283,9 +327,15 @@
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Quality</label>
                                 <select x-model="params.quality" class="w-full border border-gray-300 dark:border-zinc-600 rounded-lg p-2 text-sm bg-white dark:bg-zinc-800 dark:text-white">
-                                    <option value="low">Low</option>
-                                    <option value="medium">Medium</option>
-                                    <option value="high">High</option>
+                                    <option value="low" {{ !in_array('low', $allowedQualities) ? 'disabled' : '' }}>
+                                        Low {{ !in_array('low', $allowedQualities) ? '(Upgrade Plan)' : '' }}
+                                    </option>
+                                    <option value="medium" {{ !in_array('medium', $allowedQualities) ? 'disabled' : '' }}>
+                                        Medium {{ !in_array('medium', $allowedQualities) ? '(Upgrade Plan)' : '' }}
+                                    </option>
+                                    <option value="high" {{ !in_array('high', $allowedQualities) ? 'disabled' : '' }}>
+                                        High {{ !in_array('high', $allowedQualities) ? '(Upgrade Plan)' : '' }}
+                                    </option>
                                 </select>
                             </div>
                             <div>
@@ -515,6 +565,14 @@
             isAnalyzing: false,
             isGenerating: false,
             
+            // UI Overlay State
+            isProcessing: false,
+            processingType: '', // 'analyzing' or 'generating'
+            processingTitle: '',
+            processingMessage: '',
+            progress: 0,
+            progressInterval: null,
+            
             // Library State
             showLibraryModal: false,
             libraryPrompts: [],
@@ -527,10 +585,8 @@
             showDebugButton: false,
             debugInfo: null,
             
-            quota: {
-                daily: {{ $userQuota->getRemainingDailyQuota() }},
-                total: {{ $userQuota->getRemainingTotalQuota() }}
-            },
+            credits: {{ $credits }},
+            allowedQualities: @json($allowedQualities),
             
             params: {
                 sizeRatio: '1:1',
@@ -550,7 +606,7 @@
             },
             
             get canGenerate() {
-                return this.jobId && this.prompt && (this.quota.daily > 0 || this.quota.daily === -1);
+                return this.jobId && this.prompt && this.credits > 0;
             },
 
             // Methods
@@ -606,12 +662,49 @@
                 this.resultImage = null;
             },
             
+            stopProgress() {
+                if (this.progressInterval) {
+                    clearInterval(this.progressInterval);
+                    this.progressInterval = null;
+                }
+                this.progress = 100;
+                setTimeout(() => {
+                    this.isProcessing = false;
+                    this.progress = 0;
+                }, 500);
+            },
+
+            startProgress(type) {
+                this.isProcessing = true;
+                this.processingType = type;
+                this.progress = 0;
+                
+                if (type === 'analyzing') {
+                    this.processingTitle = 'Analyzing Images';
+                    this.processingMessage = 'Gemini AI is analyzing your model and products...';
+                } else {
+                    this.processingTitle = 'Generating Magic';
+                    this.processingMessage = 'Fal.ai is creating your virtual try-on result...';
+                }
+                
+                this.progressInterval = setInterval(() => {
+                    if (this.progress < 90) {
+                        // Slow down as it gets higher
+                        const increment = this.progress > 70 ? 0.5 : (this.progress > 40 ? 1 : 2);
+                        this.progress = Math.min(90, this.progress + increment);
+                    }
+                }, 100);
+            },
+
             async analyzeImages() {
                 if (!this.canAnalyze) return;
                 
                 this.isAnalyzing = true;
                 this.error = null;
                 this.promptStatus = 'processing';
+                
+                // Start Overlay
+                this.startProgress('analyzing');
                 
                 const formData = new FormData();
                 
@@ -656,6 +749,7 @@
                     this.promptStatus = 'waiting';
                 } finally {
                     this.isAnalyzing = false;
+                    this.stopProgress();
                 }
             },
             
@@ -664,6 +758,9 @@
                 
                 this.isGenerating = true;
                 this.error = null;
+                
+                // Start Overlay
+                this.startProgress('generating');
                 
                 try {
                     const response = await fetch('{{ route("features.products-virtual.generate") }}', {
@@ -688,8 +785,7 @@
                     
                     if (data.success) {
                         this.resultImage = data.result_url;
-                        this.quota.daily = data.remaining_daily;
-                        this.quota.total = data.remaining_total;
+                        this.credits = data.credits_remaining;
                         
                         // Handle dev mode debug info
                         if (data.dev_mode && data.debug_info) {
@@ -705,6 +801,7 @@
                     this.error = 'Network error. Please try again.';
                 } finally {
                     this.isGenerating = false;
+                    this.stopProgress();
                 }
             },
             

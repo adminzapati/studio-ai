@@ -4,7 +4,7 @@
     <div class="h-16 flex items-center px-6 border-b border-gray-100 dark:border-gray-700 overflow-hidden whitespace-nowrap">
         <a href="{{ route('dashboard') }}" class="flex items-center gap-2">
             <x-application-logo class="block h-8 w-auto fill-current text-indigo-600 dark:text-indigo-400" />
-            <span class="font-bold text-xl text-gray-900 dark:text-white tracking-tight" x-show="sidebarOpen" x-transition.opacity>Studio AI</span>
+            <span class="font-bold text-xl text-gray-900 dark:text-white tracking-tight" x-show="sidebarOpen" x-transition.opacity>{{ config('app.name', 'Studio AI') }}</span>
         </a>
     </div>
 
@@ -26,32 +26,40 @@
         </div>
 
         <!-- Batch Processor -->
+        @if(\App\Services\ModuleService::hasAccess(auth()->id(), 'batch'))
         <a href="{{ route('features.batch.index') }}" 
            class="flex items-center px-3 py-2.5 text-sm font-medium rounded-xl transition-colors whitespace-nowrap {{ request()->routeIs('features.batch.*') ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-900/20 dark:text-indigo-300' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:text-gray-900 dark:hover:text-gray-200' }}">
             <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
             <span class="ml-3" x-show="sidebarOpen" x-transition:enter="transition ease-out duration-100 delay-100" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100">Batch Processor</span>
         </a>
+        @endif
 
         <!-- Beautifier -->
+        @if(\App\Services\ModuleService::hasAccess(auth()->id(), 'beautifier'))
         <a href="{{ route('features.beautifier.index') }}" 
            class="flex items-center px-3 py-2.5 text-sm font-medium rounded-xl transition-colors whitespace-nowrap {{ request()->routeIs('features.beautifier.*') ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-900/20 dark:text-indigo-300' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:text-gray-900 dark:hover:text-gray-200' }}">
             <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"></path></svg>
             <span class="ml-3" x-show="sidebarOpen" x-transition:enter="transition ease-out duration-100 delay-100" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100">Beautifier</span>
         </a>
+        @endif
 
         <!-- Virtual Model -->
+        @if(\App\Services\ModuleService::hasAccess(auth()->id(), 'virtual_model'))
         <a href="{{ route('features.virtual-model.index') }}" 
            class="flex items-center px-3 py-2.5 text-sm font-medium rounded-xl transition-colors whitespace-nowrap {{ request()->routeIs('features.virtual-model.*') ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-900/20 dark:text-indigo-300' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:text-gray-900 dark:hover:text-gray-200' }}">
             <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
             <span class="ml-3" x-show="sidebarOpen" x-transition:enter="transition ease-out duration-100 delay-100" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100">Virtual Model</span>
         </a>
+        @endif
 
         <!-- Products Virtual -->
+        @if(\App\Services\ModuleService::hasAccess(auth()->id(), 'products_virtual'))
         <a href="{{ route('features.products-virtual.index') }}" 
            class="flex items-center px-3 py-2.5 text-sm font-medium rounded-xl transition-colors whitespace-nowrap {{ request()->routeIs('features.products-virtual.*') ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-900/20 dark:text-indigo-300' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:text-gray-900 dark:hover:text-gray-200' }}">
             <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
             <span class="ml-3" x-show="sidebarOpen" x-transition:enter="transition ease-out duration-100 delay-100" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100">Products Virtual</span>
         </a>
+        @endif
 
 
 
@@ -64,33 +72,48 @@
         </div>
 
         <!-- Prompts -->
+        @if(\App\Services\ModuleService::hasAccess(auth()->id(), 'prompts'))
         <a href="{{ route('storage.prompts.index') }}" 
            class="flex items-center px-3 py-2.5 text-sm font-medium rounded-xl transition-colors whitespace-nowrap {{ request()->routeIs('storage.prompts.*') ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-300' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:text-gray-900 dark:hover:text-gray-200' }}">
             <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
             <span class="ml-3" x-show="sidebarOpen" x-transition:enter="transition ease-out duration-100 delay-100" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100">Prompts</span>
         </a>
+        @endif
 
         <!-- Images Library -->
+        @if(\App\Services\ModuleService::hasAccess(auth()->id(), 'images'))
         <a href="{{ route('storage.images.index') }}" 
            class="flex items-center px-3 py-2.5 text-sm font-medium rounded-xl transition-colors whitespace-nowrap {{ request()->routeIs('storage.images.*') ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-300' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:text-gray-900 dark:hover:text-gray-200' }}">
             <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
             <span class="ml-3" x-show="sidebarOpen" x-transition:enter="transition ease-out duration-100 delay-100" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100">Images Library</span>
         </a>
+        @endif
 
         <!-- Model Presets -->
+        @if(\App\Services\ModuleService::hasAccess(auth()->id(), 'model_presets'))
         <a href="{{ route('storage.model-presets.index') }}" 
            class="flex items-center px-3 py-2.5 text-sm font-medium rounded-xl transition-colors whitespace-nowrap {{ request()->routeIs('storage.model-presets.*') ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-300' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:text-gray-900 dark:hover:text-gray-200' }}">
             <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
             <span class="ml-3" x-show="sidebarOpen" x-transition:enter="transition ease-out duration-100 delay-100" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100">Model Presets</span>
         </a>
+        @endif
+
+        <!-- Subscription Plans -->
+        <a href="{{ route('subscription.index') }}" 
+           class="flex items-center px-3 py-2.5 text-sm font-medium rounded-xl transition-colors whitespace-nowrap {{ request()->routeIs('subscription.index') ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-900/20 dark:text-indigo-300' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:text-gray-900 dark:hover:text-gray-200' }}">
+            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
+            <span class="ml-3" x-show="sidebarOpen" x-transition:enter="transition ease-out duration-100 delay-100" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100">Subscription Plans</span>
+        </a>
 
         <!-- HISTORY -->
+        @if(\App\Services\ModuleService::hasAccess(auth()->id(), 'history'))
         <div class="pt-4" x-show="sidebarOpen"></div>
         <a href="{{ route('history.index') }}" 
            class="flex items-center px-3 py-2.5 text-sm font-medium rounded-xl transition-colors whitespace-nowrap {{ request()->routeIs('history.*') ? 'bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-300' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:text-gray-900 dark:hover:text-gray-200' }}">
             <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
             <span class="ml-3" x-show="sidebarOpen" x-transition:enter="transition ease-out duration-100 delay-100" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100">History</span>
         </a>
+        @endif
 
         <!-- GROUP: ADMIN (Admin Only) -->
         @role('Admin')
@@ -106,6 +129,22 @@
                class="flex items-center px-3 py-2.5 text-sm font-medium rounded-xl transition-colors whitespace-nowrap {{ request()->routeIs('admin.users.*') ? 'bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-300' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:text-gray-900 dark:hover:text-gray-200' }}">
                 <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
                 <span class="ml-3" x-show="sidebarOpen" x-transition:enter="transition ease-out duration-100 delay-100" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100">Users</span>
+            </a>
+
+
+
+            <!-- Subscription Requests -->
+            <a href="{{ route('admin.subscription-requests.index') }}" 
+               class="flex items-center px-3 py-2.5 text-sm font-medium rounded-xl transition-colors whitespace-nowrap {{ request()->routeIs('admin.subscription-requests.*') ? 'bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-300' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:text-gray-900 dark:hover:text-gray-200' }}">
+                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
+                <span class="ml-3" x-show="sidebarOpen" x-transition:enter="transition ease-out duration-100 delay-100" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100">Subscription Requests</span>
+            </a>
+
+            <!-- Manage Plans -->
+            <a href="{{ route('admin.subscription-plans.index') }}" 
+               class="flex items-center px-3 py-2.5 text-sm font-medium rounded-xl transition-colors whitespace-nowrap {{ request()->routeIs('admin.subscription-plans.*') ? 'bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-300' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:text-gray-900 dark:hover:text-gray-200' }}">
+                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+                <span class="ml-3" x-show="sidebarOpen" x-transition:enter="transition ease-out duration-100 delay-100" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100">Manage Plans</span>
             </a>
 
             <!-- Settings -->

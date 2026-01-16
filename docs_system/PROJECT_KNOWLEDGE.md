@@ -75,6 +75,23 @@ Request → Controller → UseCase → Repository Interface
 - **UseCases** (`app/Domain/UseCases/`): 1 UseCase = 1 hành động nghiệp vụ.
 - **Repositories** (`app/Domain/Repositories/`): Interface chỉ định hợp đồng.
 
+- **Repositories** (`app/Domain/Repositories/`): Interface chỉ định hợp đồng.
+
+## 3a. Subscription & Credit System Logic (New!)
+### Cốt Lõi (Core Concepts)
+- **Credit-based**: Thay vì giới hạn số lượng ảnh cứng, hệ thống dùng **Credits**. Mỗi hành động (Generate) tốn số credits khác nhau tùy độ phức tạp (Quality * Aspect Ratio).
+- **Module Access Hierarchy**: Quyền truy cập module được quyết định theo thứ tự ưu tiên:
+    1. **User Override** (`user_module_overrides`): Admin gán cứng (Enable/Disable).
+    2. **Subscription Plan** (`subscription_plans`): Gói hiện tại của user cho phép gì.
+    3. **Global Default**: Trạng thái mặc định của module (`feature_modules`).
+- **Billing Cycle**: Subs có `billing_cycle_start` và `end`. Job `credits:reset-monthly` chạy mỗi ngày để reset credits cho user đến hạn (qua ngày `end`).
+
+### Quy Trình Đăng Ký (Request Workflow)
+Để kiểm soát tài nguyên, User không tự đổi gói được ngay lập tức:
+1. User chọn Plan -> Tạo `SubscriptionRequest` (Status: pending).
+2. Admin duyệt (Approve) -> System end sub cũ, start sub mới, cộng credits.
+3. User bị từ chối (Reject) -> Giữ nguyên sub cũ.
+
 ## 3. Hệ Thống Phân Quyền (RBAC Strategy)
 Dự án sử dụng mô hình 3 Roles cứng:
 1.  **Admin**: Quyền tuyệt đối. Quản lý System Settings, User, và cấu hình AI Wizard.
@@ -250,3 +267,89 @@ Mọi prompt sinh ra cho Fashion/E-commerce phải tuân thủ cấu trúc sau �
 3. **Lighting & Shadows**: Bắt buộc có mô tả ánh sáng (soft box, window light) và bóng đổ (soft shadows, highlights) để đạt độ chân thực (Photorealism).
 4. **Separation**: Đầu vào từ Image Analysis luôn phải tách biệt `analysis` (để user hiểu) và `prompt` (để máy hiểu).
 
+
+## 9. Registration Approval Flow (New!)
+
+### Core Logic
+- **Default State**: Tất cả user mới đăng ký có `is_active = false`.
+- **Auto-Login**: KHÔNG tự động login sau register. Redirect về login page với message.
+- **Notification**: Email tự động gửi tới ALL Admins (`User::role('Admin')->get()`).
+- **Login Block**: `LoginRequest::authenticate()` kiểm tra `is_active` sau khi credentials pass.
+
+### Implementation Pattern
+```php
+// RegisteredUserController::store
+$user = User::create([
+    'is_active' => false, // Default inactive
+    // ...
+]);
+
+// Notify admins
+$admins = User::role('Admin')->get();
+Notification::send($admins, new NewUserRegistration($user));
+
+// Redirect without login
+return redirect(route('login'))->with('status', 'Pending approval...');
+
+// LoginRequest::authenticate
+if (! Auth::user()->is_active) {
+    Auth::logout();
+    throw ValidationException::withMessages([
+        'email' => 'Your account is pending administrator approval.',
+    ]);
+}
+```
+
+### Admin Activation
+- Location: Admin > Users > Edit User
+- Action: Toggle "Active Account" checkbox
+- Effect: `is_active = true` → User có thể login
+
+---
+
+## 10. Activity History Access Control (New!)
+
+### Admin Privileges
+- **View All**: Admin thấy activity của TẤT CẢ users (không filter `user_id`).
+- **Delete**: Admin có quyền xóa bất kỳ activity entry nào.
+  - Route: `DELETE /history/{activityLog}` (Middleware: `role:Admin`)
+  - Side Effect: Xóa cả file thumbnail từ storage nếu tồn tại.
+
+### Implementation Pattern
+```php
+// HistoryController::index
+$query = ActivityLog::with('user');
+
+if (!auth()->user()->hasRole('Admin')) {
+    $query->forUser(auth()->id());
+}
+
+// HistoryController::destroy (Admin only)
+if ($activityLog->thumbnail_path) {
+    Storage::disk('public')->delete($activityLog->thumbnail_path);
+}
+$activityLog->delete();
+```
+
+### UI Indicators
+- **Delete Button**: Chỉ hiện với Admin (`@role('Admin')`).
+- **User Column**: Admin thấy thêm cột "User" trong activity table (optional).
+
+---
+
+## 11. Credit Management Conventions (New!)
+
+### Manual Adjustment
+- **Location**: Admin > Users > Edit User > Subscription & Credits
+- **Input**: `manual_credits` (type: number)
+- **Logic**: Trực tiếp update `UserSubscription::credits_remaining`.
+- **Use Case**: Admin điều chỉnh khi có lỗi billing, bonus credits, hoặc penalty.
+
+### Best Practices
+- **Validation**: Không cho phép số âm (`min="0"`).
+- **Audit**: (Future) Log changes vào `credit_transactions` table để track history.
+- **UI Feedback**: Hiển thị plan hiện tại để admin biết context.
+
+---
+
+**Last Updated**: 2026-01-16

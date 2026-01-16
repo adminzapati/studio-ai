@@ -12,6 +12,8 @@ use App\Models\UserQuota;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use App\Models\Setting;
+use App\Services\ActivityLogger;
+use App\Services\CreditService;
 
 /**
  * Products Virtual Controller
@@ -57,12 +59,18 @@ class ProductsVirtualController extends Controller
             ->get();
 
         $isDevMode = $this->isDevMode();
+        
+        $subscription = \App\Models\UserSubscription::where('user_id', auth()->id())
+            ->where('status', 'active')
+            ->first();
+        $credits = $subscription ? $subscription->credits_remaining : 0;
 
         return view('features.products-virtual.index', compact(
             'modelPresets',
             'userQuota',
             'recentImages',
-            'isDevMode'
+            'isDevMode',
+            'credits'
         ));
     }
 
@@ -251,7 +259,7 @@ class ProductsVirtualController extends Controller
         $request->validate([
             'job_id' => 'required|exists:products_virtual_jobs,id',
             'prompt' => 'required|string|min:10',
-            'size_ratio' => 'sometimes|string|in:1:1,2:3,3:2,4:3,3:4,16:9,9:16',
+            'size_ratio' => 'sometimes|string|in:1:1,2:3,3:2',
             'background' => 'sometimes|string|in:auto,white,transparent',
             'quality' => 'sometimes|string|in:low,medium,high',
             'format' => 'sometimes|string|in:png,jpg,webp',
@@ -348,8 +356,6 @@ class ProductsVirtualController extends Controller
                 '1:1' => '1024x1024',
                 '3:2' => '1536x1024',
                 '2:3' => '1024x1536',
-                '4:3' => '1024x768', 
-                '16:9' => '1920x1080',
             ];
             $imageSize = $imageSizeMap[$job->size_ratio] ?? '1024x1024'; // Fallback
 
@@ -493,16 +499,41 @@ class ProductsVirtualController extends Controller
                 'result_image_path' => $historyPath,
             ]);
 
-            // Record quota usage (only in production)
-            $userQuota = UserQuota::getOrCreateForUser(auth()->id());
-            $userQuota->recordGeneration();
+            // Deduct Credits
+             if ($devMode) {
+                 // No deduction in dev mode
+             } else {
+                 $cost = CreditService::calculateCost($job->quality, $job->size_ratio);
+                 CreditService::deductCredits(
+                     auth()->id(), 
+                     $cost, 
+                     "Generated virtual product image ({$job->quality}, {$job->size_ratio})",
+                     ['job_id' => $job->id]
+                 );
+             }
+
+            // Log activity
+            ActivityLogger::logProductsVirtualGeneration(
+                $job->id,
+                $request->prompt,
+                $historyPath,
+                [
+                    'size_ratio' => $job->size_ratio,
+                    'quality' => $job->quality,
+                    'background' => $job->background,
+                    'format' => $job->format,
+                ]
+            );
+
+            // Get updated remaining credits
+            $subscription = \App\Models\UserSubscription::where('user_id', auth()->id())->first();
+            $remaining = $subscription ? $subscription->credits_remaining : 0;
 
             return response()->json([
                 'success' => true,
                 'job_id' => $job->id,
                 'result_url' => Storage::disk('public')->url($historyPath),
-                'remaining_daily' => $userQuota->getRemainingDailyQuota(),
-                'remaining_total' => $userQuota->getRemainingTotalQuota(),
+                'remaining_credits' => $remaining,
             ]);
 
         } catch (\Exception $e) {

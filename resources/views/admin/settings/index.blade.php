@@ -72,6 +72,7 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path>
                                 </svg>
                             </div>
+                        </div>
                         <p class="mt-1.5 text-xs text-gray-500 dark:text-gray-400">Used for image generation features</p>
                     </div>
 
@@ -100,86 +101,43 @@
                                 <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-amber-300 dark:peer-focus:ring-amber-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-amber-500"></div>
                             </label>
                         </div>
+                    </div>
 
-                        <!-- Quota Settings -->
-                        <div class="grid grid-cols-2 gap-4">
+                    <!-- Storage Management -->
+                    <div class="mt-6 pt-4 border-t border-gray-100 dark:border-zinc-800">
+                         <h4 class="text-md font-semibold text-gray-800 dark:text-gray-200 mb-4 flex items-center gap-2">
+                            <svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                            </svg>
+                            Storage Management
+                        </h4>
+                        <div class="flex items-center justify-between p-4 bg-gray-50 dark:bg-zinc-800/50 rounded-xl border border-gray-200 dark:border-zinc-700">
                             <div>
-                                <label for="products_virtual_daily_limit" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                    Daily Limit
-                                </label>
-                                <input type="number" id="products_virtual_daily_limit" name="products_virtual_daily_limit" 
-                                       value="{{ $settings['products_virtual_daily_limit'] }}"
-                                       min="1" placeholder="10"
-                                       class="w-full rounded-xl border-gray-300 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white focus:border-indigo-500 focus:ring-indigo-500 shadow-sm">
-                                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Per user per day</p>
+                                <p class="text-sm font-medium text-gray-700 dark:text-gray-300">Temporary Files (Uploaded & Generated)</p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                    Location: <code class="bg-gray-200 dark:bg-zinc-700 px-1 rounded">storage/temp/products-virtual</code>
+                                </p>
+                                <div class="flex items-center gap-4 mt-2">
+                                    <span class="text-xs font-semibold bg-blue-100 text-blue-700 px-2 py-1 rounded-full">
+                                        Size: {{ $tempStats['size'] }}
+                                    </span>
+                                    <span class="text-xs font-semibold bg-gray-100 text-gray-700 px-2 py-1 rounded-full">
+                                        Files: {{ $tempStats['count'] }}
+                                    </span>
+                                </div>
                             </div>
                             <div>
-                                <label for="products_virtual_total_limit" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                    Total Limit
-                                </label>
-                                <input type="number" id="products_virtual_total_limit" name="products_virtual_total_limit" 
-                                       value="{{ $settings['products_virtual_total_limit'] }}"
-                                       min="1" placeholder="100"
-                                       class="w-full rounded-xl border-gray-300 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white focus:border-indigo-500 focus:ring-indigo-500 shadow-sm">
-                                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Lifetime per user</p>
-                            </div>
-                        </div>
-                            </div>
-                        </div>
-
-                        <!-- Storage Management -->
-                        <div class="mt-6 pt-4 border-t border-gray-100 dark:border-zinc-800">
-                             <h4 class="text-md font-semibold text-gray-800 dark:text-gray-200 mb-4 flex items-center gap-2">
-                                <svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                                </svg>
-                                Storage Management
-                            </h4>
-                            <div class="flex items-center justify-between p-4 bg-gray-50 dark:bg-zinc-800/50 rounded-xl border border-gray-200 dark:border-zinc-700">
-                                <div>
-                                    <p class="text-sm font-medium text-gray-700 dark:text-gray-300">Temporary Files (Uploaded & Generated)</p>
-                                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                        Location: <code class="bg-gray-200 dark:bg-zinc-700 px-1 rounded">storage/temp/products-virtual</code>
-                                    </p>
-                                    <div class="flex items-center gap-4 mt-2">
-                                        <span class="text-xs font-semibold bg-blue-100 text-blue-700 px-2 py-1 rounded-full">
-                                            Size: {{ $tempStats['size'] }}
-                                        </span>
-                                        <span class="text-xs font-semibold bg-gray-100 text-gray-700 px-2 py-1 rounded-full">
-                                            Files: {{ $tempStats['count'] }}
-                                        </span>
-                                    </div>
-                                </div>
-                                <div>
-                                    <button form="clear-temp-form" type="submit" 
-                                            onclick="return confirm('Are you sure? This will delete all temporary images.')"
-                                            class="px-4 py-2 bg-white dark:bg-zinc-700 border border-gray-300 dark:border-zinc-600 text-red-600 dark:text-red-400 text-sm font-medium rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors shadow-sm">
-                                        Clear Temp Files
-                                    </button>
-                                </div>
+                                <button type="button" form="clear-temp-form" 
+                                        onclick="document.getElementById('clear-temp-form').submit(); return false;"
+                                        class="px-4 py-2 bg-white dark:bg-zinc-700 border border-gray-300 dark:border-zinc-600 text-red-600 dark:text-red-400 text-sm font-medium rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors shadow-sm">
+                                    Clear Temp Files
+                                </button>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Close main form, create separate form for clear action to avoid conflict -->
-                    </form>
-                    
-                    <form id="clear-temp-form" method="POST" action="{{ route('admin.settings.clear-temp') }}" class="hidden">
-                        @csrf
-                    </form>
-                    
-                    <!-- Re-open main form structure context (trick for valid HTML if needed, but better to close form correctly above) -->
-                    <!-- Wait, the original code had one form wrapping everything. I closed it above. But the original code closed it at line 137. -->
-                    <!-- I should NOT close it inside the content block. -->
-                    <!-- I must put the Clear Button OUTSIDE the main form or use 'form=' attribute. -->
-                    <!-- I used 'form="clear-temp-form"' on the button. And added the hidden form below the main form closing tag. -->
-                    <!-- BUT my ReplacementContent ENDS with </div>, which matches line 127 closing the 'pt-4' div. -->
-                    <!-- The main form closes at line 137. -->
-                    <!-- SO I should NOT close the form in my replacement. -->
-                    <!-- I will insert the Storage Management block BEFORE the submit button div (line 129). -->
-
-                    <!-- Correct Strategy: Insert before line 129. -->
-
+                    <!-- Save Button (INSIDE FORM) -->
+                    <div class="pt-4">
                         <button type="submit" class="w-full sm:w-auto inline-flex justify-center items-center px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium text-sm rounded-xl shadow-lg shadow-indigo-500/30 transition-all duration-200 transform hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 cursor-pointer">
                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
@@ -187,6 +145,11 @@
                             Save Settings
                         </button>
                     </div>
+                </form>
+                
+                <!-- Separate form for clear action -->
+                <form id="clear-temp-form" method="POST" action="{{ route('admin.settings.clear-temp') }}" class="hidden">
+                    @csrf
                 </form>
             </div>
         </div>

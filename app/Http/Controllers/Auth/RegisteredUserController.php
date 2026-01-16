@@ -39,12 +39,33 @@ class RegisteredUserController extends Controller
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
+            'is_active' => false, // Default to inactive
         ]);
+
+        // Auto-assign Free subscription plan
+        $freePlan = \App\Models\SubscriptionPlan::where('slug', 'free')->first();
+        if ($freePlan) {
+            \App\Models\UserSubscription::create([
+                'user_id' => $user->id,
+                'subscription_plan_id' => $freePlan->id,
+                'status' => 'active',
+                'credits_remaining' => $freePlan->credits_monthly,
+                'credits_used_this_month' => 0,
+                'billing_cycle_start' => now(),
+                'billing_cycle_end' => now()->addMonth(),
+            ]);
+        }
 
         event(new Registered($user));
 
-        Auth::login($user);
+        // Notify Admins
+        $admins = User::role('Admin')->get();
+        if ($admins->count() > 0) {
+            \Illuminate\Support\Facades\Notification::send($admins, new \App\Notifications\NewUserRegistration($user));
+        }
 
-        return redirect(route('dashboard', absolute: false));
+        // Auth::login($user); // Do not login automatically
+
+        return redirect(route('login'))->with('status', 'Registration successful! Your account is pending approval by an administrator.');
     }
 }

@@ -33,26 +33,29 @@
             </div>
         </div>
 
-        <!-- Stat Card 3 -->
+        <!-- Stat Card 3: Credits -->
         <div class="bg-white dark:bg-zinc-900 overflow-hidden shadow-sm rounded-2xl border border-gray-100 dark:border-zinc-800 p-6 transition-transform hover:-translate-y-1 duration-300">
             <div class="flex items-center">
-                <div class="p-3 rounded-xl bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400">
-                     <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                <div class="p-3 rounded-xl bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400">
+                     <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                 </div>
                 <div class="ml-4">
-                    <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Model Presets</p>
-                    <h3 class="text-2xl font-bold text-gray-900 dark:text-white">Active</h3>
+                    <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Credits Remaining</p>
+                    @php
+                        $sub = Auth::user()->activeSubscription;
+                    @endphp
+                    <h3 class="text-2xl font-bold text-gray-900 dark:text-white">{{ $sub ? number_format($sub->credits_remaining) : 0 }}</h3>
                 </div>
             </div>
         </div>
 
-        <!-- Stat Card 4 -->
+        <!-- Stat Card 4: Subscription Plan -->
         <div class="bg-gradient-to-br from-indigo-600 to-violet-600 overflow-hidden shadow-lg shadow-indigo-500/30 rounded-2xl p-6 text-white relative group cursor-pointer transition-transform hover:-translate-y-1 duration-300">
              <div class="absolute top-0 right-0 -mt-2 -mr-2 w-24 h-24 bg-white/10 rounded-full blur-xl group-hover:scale-150 transition-transform duration-500"></div>
              <div class="relative z-10">
-                <p class="text-indigo-100 font-medium mb-1">Pro Plan</p>
-                <h3 class="text-2xl font-bold mb-4">Active</h3>
-                <a href="#" class="text-xs font-bold bg-white/20 hover:bg-white/30 px-3 py-1.5 rounded-lg transition-colors inline-block">Manage Subscription</a>
+                <p class="text-indigo-100 font-medium mb-1">Current Plan</p>
+                <h3 class="text-2xl font-bold mb-4">{{ $sub ? $sub->plan->name : 'No Plan' }}</h3>
+                <a href="{{ route('subscription.index') }}" class="text-xs font-bold bg-white/20 hover:bg-white/30 px-3 py-1.5 rounded-lg transition-colors inline-block">Manage Subscription</a>
              </div>
         </div>
 
@@ -80,6 +83,23 @@
             
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <!-- REMOVED Auto Prompt Wizard -->
+
+                <!-- Action: Products Virtual -->
+                <a href="{{ route('features.products-virtual.index') }}" class="group relative bg-white dark:bg-zinc-900 p-6 rounded-2xl border border-gray-100 dark:border-zinc-800 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col justify-between h-48 overflow-hidden">
+                     <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                         <svg class="w-24 h-24 text-fuchsia-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
+                    </div>
+                    <div class="relative z-10">
+                        <div class="w-12 h-12 bg-fuchsia-50 dark:bg-fuchsia-900/30 rounded-xl flex items-center justify-center text-fuchsia-600 dark:text-fuchsia-400 mb-4 group-hover:scale-110 transition-transform">
+                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                        </div>
+                        <h4 class="text-lg font-bold text-gray-900 dark:text-white group-hover:text-fuchsia-600 transition-colors">Virtual Try-On</h4>
+                        <p class="text-sm text-gray-500 dark:text-gray-400 mt-2">Try products on models with AI.</p>
+                    </div>
+                    <div class="mt-4 flex items-center text-fuchsia-600 font-medium text-sm group-hover:translate-x-1 transition-transform">
+                        Launch Tool <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
+                    </div>
+                </a>
 
                 <!-- Action: Batch Processing -->
                 <a href="{{ route('features.batch.index') }}" class="group relative bg-white dark:bg-zinc-900 p-6 rounded-2xl border border-gray-100 dark:border-zinc-800 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col justify-between h-48 overflow-hidden grayscale hover:grayscale-0">
@@ -165,9 +185,9 @@
                 </div>
                 <h4 class="font-bold text-lg mb-2">Better Prompts?</h4>
                 <p class="text-sm text-gray-400 mb-4">Use specific lighting terms like "Rembrandt lighting" or "Golden Hour" to dramatically improve your product shots.</p>
-                <button class="w-full py-2 bg-white/10 hover:bg-white/20 rounded-lg text-sm font-medium transition-colors">
+                <a href="{{ route('guide.index') }}" class="block w-full text-center py-2 bg-white/10 hover:bg-white/20 rounded-lg text-sm font-medium transition-colors">
                     Read Guide
-                </button>
+                </a>
             </div>
         </div>
     </div>

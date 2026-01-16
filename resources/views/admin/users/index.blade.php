@@ -19,6 +19,7 @@
                     <tr>
                         <th scope="col" class="px-6 py-4">User</th>
                         <th scope="col" class="px-6 py-4">Role</th>
+                        <th scope="col" class="px-6 py-4">Plan</th>
                         <th scope="col" class="px-6 py-4">Status</th>
                         <th scope="col" class="px-6 py-4 text-center">Prompts</th>
                         <th scope="col" class="px-6 py-4 text-center">Images</th>
@@ -46,6 +47,28 @@
                                     {{ $role->name }}
                                 </span>
                             @endforeach
+                        </td>
+                        <td class="px-6 py-4">
+                            <form action="{{ route('admin.users.update', $user) }}" method="POST" class="flex items-center">
+                                @csrf
+                                @method('PUT')
+                                <!-- Preserve other required fields for update validation if necessary, simplified here assuming update accepts partial -->
+                                <input type="hidden" name="name" value="{{ $user->name }}">
+                                <input type="hidden" name="email" value="{{ $user->email }}">
+                                <input type="hidden" name="role" value="{{ $user->roles->first()->name ?? 'User' }}">
+
+                                @php
+                                    $currentPlanId = $user->activeSubscription?->subscription_plan_id;
+                                @endphp
+                                <select name="subscription_plan_id" onchange="if(confirm('Change plan for {{ $user->name }}?')) this.form.submit()" class="text-xs border-gray-300 dark:border-gray-700 dark:bg-zinc-800 dark:text-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-lg shadow-sm">
+                                    <option value="">No Plan</option>
+                                    @foreach($plans as $plan)
+                                        <option value="{{ $plan->id }}" {{ $currentPlanId == $plan->id ? 'selected' : '' }}>
+                                            {{ $plan->name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </form>
                         </td>
                         <td class="px-6 py-4">
                             @if($user->is_active)

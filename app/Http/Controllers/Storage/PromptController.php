@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Storage;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use App\Services\ActivityLogger;
 
 class PromptController extends Controller
 {
@@ -147,14 +148,17 @@ class PromptController extends Controller
             }
         }
 
-        $request->user()->savedPrompts()->create([
+        $prompt = $request->user()->savedPrompts()->create([
             'name' => $validated['name'],
             'prompt' => $validated['prompt'],
-            'category' => $validated['category'],
+'category' => $validated['category'],
             'is_favorite' => $request->boolean('is_favorite'),
             'image_path' => $imagePath,
             'method' => $validated['method'] ?? 'manual',
         ]);
+
+        // Log activity
+        ActivityLogger::logPromptCreated($prompt->id, $prompt->name, $imagePath);
 
         return redirect()->route('storage.prompts.index')->with('success', 'Prompt saved successfully!');
     }
@@ -237,6 +241,9 @@ class PromptController extends Controller
 
         $prompt->update($data);
 
+        // Log activity
+        ActivityLogger::logPromptUpdated($prompt->id, $prompt->name);
+
         return redirect()->route('storage.prompts.index')->with('success', 'Prompt updated successfully.');
     }
 
@@ -259,7 +266,11 @@ class PromptController extends Controller
             \App\Models\ImageLibrary::where('path', $prompt->image_path)->delete();
         }
         
+        $promptName = $prompt->name; // Store before deletion
         $prompt->delete();
+
+        // Log activity
+        ActivityLogger::logPromptDeleted($promptName);
 
         return redirect()->route('storage.prompts.index')->with('success', 'Prompt deleted successfully.');
     }

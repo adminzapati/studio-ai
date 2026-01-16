@@ -15,15 +15,21 @@
 | Feature Group | Feature Name | Priority | Status | Deviation from Original |
 | :--- | :--- | :--- | :--- | :--- |
 | **Foundation** | **Auth & RBAC** | P0 | ✅ **Done** | Added `avatar` to Users table. Use `firstOrCreate` for seeders. |
+| **Foundation** | **Registration Approval** | P0 | ✅ **Done** | NEW: Admin approval workflow for new users. |
 | **Foundation** | **Models & DB** | P0 | ✅ **Done** | Fixed Migration Order logic. |
-| **Foundation** | **User Management** | P1 | ✅ **Done** | Admin CRUD & Lock. |
+| **Foundation** | **User Management** | P1 | ✅ **Enhanced** | Admin CRUD & Lock. Added Manual Credit Adjustment. |
 | **Storage Hub** | **Prompt Library** | P1 | ✅ **Done** | Search, Filter, Sort, Duplicate, Edit, Image Thumbnails. |
 | **Storage Hub** | **Image Library** | P1 | ✅ **Done** | Auto-sync from Prompt Creation. Gallery Grid. |
 | **Storage Hub** | **Model Library** | P1 | ✅ **Done** | Admin-only Management, User Read-only. |
 | **Feature** | **Prompt Creation** | P1 | ✅ **Done** | 3-pane workflow, Edit Mode support, Image Reference storage. |
+| **Feature** | **Activity History** | P1 | ✅ **Enhanced** | NEW: Image preview (Viewer.js), Admin view-all, Admin delete. |
 | **Feature** | **Batch Processor** | P1 | ⏳ Pending | - |
 | **Feature** | **Product Staging** | - | ❌ **Removed** | Feature deprecated and removed. |
 | **Feature** | **Products Virtual** | P1 | ✅ **Enhanced** | Hybrid Workflow, Integrated Prompt Library, Quota System. |
+| **System** | **Subscription & Credits** | P0 | ✅ **Done** | Credit Logic, Plan Management, Admin Request Workflow. |
+| **System** | **Module Access** | P0 | ✅ **Done** | Middleware protection, Hierarchical overrides. |
+| **UI/UX** | **Navigation Credits** | P2 | ✅ **Done** | NEW: Credit balance badge in navigation bar. |
+| **UI/UX** | **Auth Pages** | P2 | ✅ **Enhanced** | NEW: Register link on login page. |
 
 ---
 
@@ -158,3 +164,61 @@ GET  /features/products-virtual/{id}/download → download
   - `api.fal.ai` is strictly deprecated/banned.
 - **Upload Strategy**: Direct multipart upload prioritized over Base64.
 - **Documentation**: Updated `BLUEPRINT.md` & `PROJECT_KNOWLEDGE.md` to reflect these core architectural rules.
+
+---
+
+## 5. New Features (v0.4.0 - 2026-01-16)
+
+### 5.1 Registration Approval Flow
+**Status**: ✅ Implemented
+
+**Workflow**:
+1. User registers → Account created with `is_active = false`
+2. Email notification sent to all Admins
+3. User redirected to login with "pending approval" message
+4. Login blocked until Admin activates account
+5. Admin approves via Edit User page → `is_active = true`
+
+**Files**:
+- Notification: `app/Notifications/NewUserRegistration.php`
+- Controller: `app/Http/Controllers/Auth/RegisteredUserController.php`
+- Login Check: `app/Http/Requests/Auth/LoginRequest.php`
+
+### 5.2 Activity History Enhancements
+**Status**: ✅ Implemented
+
+**Features**:
+- **Image Preview**: Viewer.js integration (eye icon overlay, full-screen viewer)
+- **Admin Access**: View ALL users' activity (not just own)
+- **Admin Delete**: Delete any activity entry + associated thumbnail file
+
+**Routes**:
+```
+GET    /history                → index (role-based filtering)
+DELETE /history/{activityLog}  → destroy (Admin only)
+```
+
+### 5.3 Manual Credit Management
+**Status**: ✅ Implemented
+
+**Location**: Admin > Users > Edit User
+
+**Feature**: Input field "Manual Credits (Current Balance)" allows Admin to directly set user's available credits.
+
+**Logic**: Updates `UserSubscription::credits_remaining` directly.
+
+**UI**: Section "Subscription & Credits" shows current plan and credit input.
+
+### 5.4 UI/UX Improvements
+**Status**: ✅ Implemented
+
+**Changes**:
+1. **Login Page**: Added "Register" link in footer (justify-between layout)
+2. **Navigation Bar**: Credit balance badge (amber theme, coin icon, responsive)
+   - Shows: `Credits: {amount}`
+   - Hidden on small screens
+   - Fetches from: `Auth::user()->activeSubscription->credits_remaining`
+
+---
+
+**Last Updated**: 2026-01-16

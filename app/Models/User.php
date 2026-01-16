@@ -73,4 +73,11 @@ class User extends Authenticatable
     {
         return $this->hasMany(ProductsVirtualJob::class);
     }
+    /**
+     * Get the user's active subscription.
+     */
+    public function activeSubscription()
+    {
+        return $this->hasOne(UserSubscription::class)->where('status', 'active');
+    }
 }

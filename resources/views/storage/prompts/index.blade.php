@@ -189,16 +189,14 @@
                             </div>
 
                             <!-- Footer/Actions -->
-                            <div class="pt-3 border-t border-gray-100 dark:border-zinc-800 flex justify-between items-center">
+                            <div class="pt-3 border-t border-gray-100 dark:border-zinc-800 flex justify-between items-center relative z-20 pointer-events-none">
                                 <span class="text-xs text-gray-400 dark:text-gray-500 font-medium">
                                     {{ $prompt->created_at->diffForHumans() }}
                                 </span>
-                                <div class="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200 relative z-10">
+                                <div class="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-auto">
                                     
-
-
                                     <!-- Duplicate Button -->
-                                    <form action="{{ route('storage.prompts.duplicate', $prompt) }}" method="POST" class="inline" onsubmit="return confirm('Do you want to duplicate this prompt?');">
+                                    <form action="{{ route('storage.prompts.duplicate', $prompt) }}" method="POST" class="inline-block" onsubmit="return confirm('Do you want to duplicate this prompt?');">
                                         @csrf
                                         <button type="submit" class="p-2 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 rounded-full hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors" title="Duplicate">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -206,8 +204,6 @@
                                             </svg>
                                         </button>
                                     </form>
-
-
 
                                     <!-- Edit & Delete Buttons (Owner or Admin) -->
                                     @if(auth()->id() === $prompt->user_id || auth()->user()->hasRole('Admin'))
@@ -219,7 +215,7 @@
                                         </a>
 
                                         <!-- Delete Button -->
-                                        <form action="{{ route('storage.prompts.destroy', $prompt) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this prompt?');">
+                                        <form action="{{ route('storage.prompts.destroy', $prompt) }}" method="POST" class="inline-block" onsubmit="return confirm('Are you sure you want to delete this prompt?');">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="p-2 text-gray-400 hover:text-red-600 dark:hover:text-red-400 rounded-full hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors" title="Delete">
@@ -233,13 +229,7 @@
                             </div>
                             
                             <!-- Detailed Link Overlay -->
-                            <a href="{{ route('storage.prompts.show', $prompt) }}" class="absolute inset-x-0 top-0 bottom-12 z-0"></a>
-                            <!-- Bring controls to front -->
-                            <div class="relative z-10 pointer-events-none">
-                                <div class="pointer-events-auto">
-                                    <!-- Actions container needs to be interactive -->
-                                </div>
-                            </div>
+                            <a href="{{ route('storage.prompts.show', $prompt) }}" class="absolute inset-0 z-0"></a>
                         </div>
                     @endforeach
                 </div>

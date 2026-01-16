@@ -23,7 +23,22 @@
                 <x-dropdown align="right" width="48">
                     <x-slot name="trigger">
                         <button class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-800 hover:text-gray-700 dark:hover:text-gray-300 focus:outline-none transition ease-in-out duration-150">
-                            <div>{{ Auth::user()->name }}</div>
+                            <div class="flex flex-col items-end">
+                                <div class="font-semibold">{{ Auth::user()->name }}</div>
+                                <div class="text-xs text-gray-400 flex items-center gap-1">
+                                    @php
+                                        $activeSub = Auth::user()->activeSubscription;
+                                        $planName = $activeSub ? $activeSub->plan->name : 'No Plan';
+                                        $pendingReq = \App\Models\SubscriptionRequest::where('user_id', Auth::id())->where('status', 'pending')->exists();
+                                    @endphp
+                                    <div class="flex items-center gap-2">
+                                        <span>{{ $planName }}</span>
+                                        @if($pendingReq)
+                                            <span class="px-2 py-0.5 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 text-xs font-bold rounded-full">Pending</span>
+                                        @endif
+                                    </div>
+                                </div>
+                            </div>
 
                             <div class="ms-1">
                                 <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">

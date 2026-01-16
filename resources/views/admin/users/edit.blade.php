@@ -46,6 +46,52 @@
                 </div>
             </div>
 
+            <!-- Subscription & Credits -->
+            <div class="border-t border-gray-100 dark:border-zinc-800 pt-6 mt-6">
+                <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Subscription & Credits</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <x-input-label for="manual_credits" :value="__('Manual Credits (Current Balance)')" />
+                        <x-text-input id="manual_credits" class="block mt-1 w-full" type="number" name="manual_credits" 
+                            :value="old('manual_credits', $user->activeSubscription->credits_remaining ?? 0)" min="0" />
+                        <p class="text-xs text-gray-500 mt-1 dark:text-gray-400">
+                            Set the exact number of credits available to this user. 
+                            Current Plan: {{ $user->activeSubscription?->plan?->name ?? 'None' }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Module Access Overrides (Admin Only) -->
+            <div class="border-t border-gray-100 dark:border-zinc-800 pt-6 mt-6">
+                <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Module Access Overrides</h3>
+                <p class="text-sm text-gray-500 mb-4">Override global/subscription settings for this user.</p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    @foreach($modules as $module)
+                        @php
+                            $overrideValue = isset($userOverrides[$module->id]) ? ($userOverrides[$module->id] ? '1' : '0') : 'default';
+                        @endphp
+                        <div class="p-4 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800">
+                            <div class="flex items-center gap-2 mb-3">
+                                <div class="p-2 bg-white dark:bg-gray-700 rounded-lg">
+                                    <!-- Icon placeholder for now, or use module icon -->
+                                    <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                                    </svg>
+                                </div>
+                                <span class="font-medium text-gray-700 dark:text-gray-300">{{ $module->name }}</span>
+                            </div>
+                            <select name="module_overrides[{{ $module->id }}]" class="block w-full text-sm border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                <option value="default" {{ $overrideValue === 'default' ? 'selected' : '' }}>Use Plan Default</option>
+                                <option value="1" {{ $overrideValue === '1' ? 'selected' : '' }}>Force Enable</option>
+                                <option value="0" {{ $overrideValue === '0' ? 'selected' : '' }}>Force Disable</option>
+                            </select>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+
             <div class="border-t border-gray-100 dark:border-zinc-800 my-6"></div>
             
             <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Change Password <span class="text-sm font-normal text-gray-500">(Leave blank to keep current)</span></h3>

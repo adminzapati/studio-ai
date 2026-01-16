@@ -36,16 +36,22 @@
                     
                     <!-- Search Bar (Placeholder) -->
                     <div class="flex-1 max-w-lg flex items-center gap-4">
-                        <div class="relative group flex-1">
-                            <span class="absolute inset-y-0 left-0 flex items-center pl-3">
-                                <svg class="w-5 h-5 text-gray-400 group-focus-within:text-indigo-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                            </span>
-                            <input type="text" class="w-full py-2 pl-10 pr-4 bg-gray-50 dark:bg-zinc-800 border-none rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 transition-all placeholder-gray-400 dark:text-gray-200" placeholder="Search prompts, images, or settings...">
-                        </div>
+                        
                     </div>
 
                     <!-- Right Actions -->
                     <div class="flex items-center space-x-4">
+                        <!-- Credit Balance -->
+                        @php
+                            $userCredits = Auth::user()->activeSubscription?->credits_remaining ?? 0;
+                        @endphp
+                        <div class="hidden sm:flex items-center px-3 py-1 bg-amber-50 dark:bg-amber-900/20 rounded-full border border-amber-100 dark:border-amber-800/50">
+                            <svg class="w-4 h-4 text-amber-500 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <span class="text-xs font-semibold text-amber-600 dark:text-amber-400 mr-1.5">Credits:</span>
+                            <span class="text-sm font-bold text-gray-900 dark:text-white">{{ number_format($userCredits) }}</span>
+                        </div>
                         <!-- Notifications (Placeholder) -->
                         <button class="relative p-2 text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 transition-colors">
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
@@ -58,7 +64,13 @@
                                 <img class="h-8 w-8 rounded-full object-cover border border-gray-200 dark:border-zinc-700" src="{{ Auth::user()->avatar_url ?? 'https://ui-avatars.com/api/?name='.urlencode(Auth::user()->name) }}" alt="{{ Auth::user()->name }}" />
                                 <div class="hidden md:block text-left">
                                     <p class="text-sm font-semibold text-gray-700 dark:text-gray-200">{{ Auth::user()->name }}</p>
-                                    <p class="text-xs text-gray-500 dark:text-gray-400">Pro Plan</p>
+                                    @php
+                                        $activeSub = Auth::user()->activeSubscription;
+                                        $pendingReq = \App\Models\SubscriptionRequest::where('user_id', Auth::id())->where('status', 'pending')->exists();
+                                    @endphp
+                                    <p class="text-xs text-gray-500 dark:text-gray-400">
+                                        {{ $pendingReq ? '' : ($activeSub ? $activeSub->plan->name : 'No Plan') }}
+                                    </p>
                                 </div>
                                 <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                             </button>
