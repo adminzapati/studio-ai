@@ -14,20 +14,6 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
     
-    # Build trên GitHub
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '24'
-        cache: 'npm'
-    
-    - name: Install dependencies
-      run: npm ci
-    
-    - name: Build frontend
-      run: npm run build
-    
-    # Setup SSH
     - name: Setup SSH
       uses: webfactory/ssh-agent@v0.9.0
       with:
@@ -38,26 +24,13 @@ jobs:
         mkdir -p ~/.ssh
         ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
     
-    # Upload build files
-    - name: Upload build to server
-      env:
-        SSH_USER: ${{ secrets.SSH_USER }}
-        SSH_HOST: ${{ secrets.SSH_HOST }}
-        PROJECT_PATH: ${{ secrets.PROJECT_PATH }}
-      run: |
-        rsync -avz --delete \
-          -e "ssh -o StrictHostKeyChecking=no" \
-          ./public/build/ \
-          $SSH_USER@$SSH_HOST:$PROJECT_PATH/public/build/
-    
-    # Deploy
     - name: Deploy to Production Server
       env:
         SSH_USER: ${{ secrets.SSH_USER }}
         SSH_HOST: ${{ secrets.SSH_HOST }}
         PROJECT_PATH: ${{ secrets.PROJECT_PATH }}
       run: |
-        ssh -T $SSH_USER@$SSH_HOST bash << 'ENDSSH'
+        ssh $SSH_USER@$SSH_HOST << 'ENDSSH'
           set -e
           
           echo "========================================="
@@ -68,7 +41,7 @@ jobs:
           
           # Maintenance mode
           echo "🔒 Enabling maintenance mode..."
-          php artisan down --retry=60 || true
+          php artisan down --retry=60 --secret="deployment-secret-key" || true
           
           # Pull latest code
           echo "📥 Pulling latest code..."
@@ -77,27 +50,61 @@ jobs:
           
           # Install PHP dependencies
           echo "📦 Installing PHP dependencies..."
-          /usr/local/bin/composer install --optimize-autoloader --no-dev --no-interaction
+          composer install --optimize-autoloader --no-dev --no-interaction --prefer-dist
+          
+          # Stop MySQL temporarily to free RAM for build
+          echo "⏸️  Stopping MySQL..."
+          systemctl stop mysql || true
+          
+          # Install ALL Node dependencies (including devDependencies for build)
+          echo "📦 Installing Node dependencies..."
+          npm ci
+          
+          # Build frontend assets
+          echo "🔨 Building frontend..."
+          npm run build
+          
+          # Start MySQL again
+          echo "▶️  Starting MySQL..."
+          systemctl start mysql || true
+          
+          # Remove dev dependencies to save space
+          echo "🧹 Cleaning dev dependencies..."
+          rm -rf node_modules
+          npm ci --omit=dev
           
           # Database migrations
           echo "💾 Running migrations..."
           php artisan migrate --force
           
-          # Clear and optimize
+          # Clear caches
           echo "🧹 Clearing caches..."
-          php artisan optimize:clear
+          php artisan config:clear
+          php artisan cache:clear
+          php artisan route:clear
+          php artisan view:clear
           
+          # Optimize
           echo "⚡ Optimizing..."
-          php artisan optimize
+          php artisan config:cache
+          php artisan route:cache
+          php artisan view:cache
+          php artisan event:cache
+          
+          # Clear OPcache
+          php artisan optimize:clear
           
           # Restart workers
           echo "🔄 Restarting workers..."
           php artisan queue:restart
-          supervisorctl restart laravel-worker:* 2>/dev/null || true
+          
+          if command -v supervisorctl &> /dev/null; then
+            supervisorctl restart laravel-worker:* 2>/dev/null || echo "No supervisor workers"
+          fi
           
           # Permissions
           echo "🔐 Setting permissions..."
-          chmod -R 775 storage bootstrap/cache public/build
+          chmod -R 775 storage bootstrap/cache
           chown -R www:www .
           
           # Disable maintenance
