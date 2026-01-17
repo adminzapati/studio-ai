@@ -30,7 +30,7 @@ jobs:
         SSH_HOST: ${{ secrets.SSH_HOST }}
         PROJECT_PATH: ${{ secrets.PROJECT_PATH }}
       run: |
-        ssh $SSH_USER@$SSH_HOST << 'ENDSSH'
+        ssh -T $SSH_USER@$SSH_HOST bash << 'ENDSSH'
           set -e
           
           echo "========================================="
@@ -38,6 +38,10 @@ jobs:
           echo "========================================="
           
           cd ${{ secrets.PROJECT_PATH }}
+          
+          # Verify Node is available
+          echo "Node version: $(node -v)"
+          echo "NPM version: $(npm -v)"
           
           # Maintenance mode
           echo "🔒 Enabling maintenance mode..."
@@ -50,23 +54,13 @@ jobs:
           
           # Install PHP dependencies
           echo "📦 Installing PHP dependencies..."
-          composer install --optimize-autoloader --no-dev --no-interaction
+          /usr/local/bin/composer install --optimize-autoloader --no-dev --no-interaction
           
-          # Load NVM and use Node v20
-          echo "🔧 Setting up Node.js v20..."
-          export NVM_DIR="$HOME/.nvm"
-          [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-          nvm use 20 || nvm install 20
-          
-          # Verify Node version
-          node -v
-          npm -v
-          
-          # Stop MySQL temporarily to free RAM for build
+          # Stop MySQL to free RAM
           echo "⏸️  Stopping MySQL temporarily..."
-          systemctl stop mysql
+          systemctl stop mysql || true
           
-          # Install Node dependencies (ALL, including dev)
+          # Install Node dependencies
           echo "📦 Installing Node dependencies..."
           npm ci
           
@@ -74,32 +68,25 @@ jobs:
           echo "🔨 Building frontend..."
           npm run build
           
-          # Start MySQL again
+          # Start MySQL
           echo "▶️  Starting MySQL..."
-          systemctl start mysql
+          systemctl start mysql || true
           
-          # Clean dev dependencies to save space
+          # Clean dev dependencies
           echo "🧹 Removing dev dependencies..."
           rm -rf node_modules
-          npm ci --production
+          npm ci --omit=dev
           
           # Database migrations
           echo "💾 Running migrations..."
           php artisan migrate --force
           
-          # Clear caches
+          # Clear and optimize
           echo "🧹 Clearing caches..."
-          php artisan config:clear
-          php artisan cache:clear
-          php artisan route:clear
-          php artisan view:clear
+          php artisan optimize:clear
           
-          # Optimize
           echo "⚡ Optimizing..."
-          php artisan config:cache
-          php artisan route:cache
-          php artisan view:cache
-          php artisan event:cache
+          php artisan optimize
           
           # Restart workers
           echo "🔄 Restarting workers..."
