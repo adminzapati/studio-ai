@@ -14,6 +14,20 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
     
+    # Build trên GitHub
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '24'
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Build frontend
+      run: npm run build
+    
+    # Setup SSH
     - name: Setup SSH
       uses: webfactory/ssh-agent@v0.9.0
       with:
@@ -24,6 +38,19 @@ jobs:
         mkdir -p ~/.ssh
         ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
     
+    # Upload build files
+    - name: Upload build to server
+      env:
+        SSH_USER: ${{ secrets.SSH_USER }}
+        SSH_HOST: ${{ secrets.SSH_HOST }}
+        PROJECT_PATH: ${{ secrets.PROJECT_PATH }}
+      run: |
+        rsync -avz --delete \
+          -e "ssh -o StrictHostKeyChecking=no" \
+          ./public/build/ \
+          $SSH_USER@$SSH_HOST:$PROJECT_PATH/public/build/
+    
+    # Deploy
     - name: Deploy to Production Server
       env:
         SSH_USER: ${{ secrets.SSH_USER }}
@@ -39,10 +66,6 @@ jobs:
           
           cd ${{ secrets.PROJECT_PATH }}
           
-          # Verify Node is available
-          echo "Node version: $(node -v)"
-          echo "NPM version: $(npm -v)"
-          
           # Maintenance mode
           echo "🔒 Enabling maintenance mode..."
           php artisan down --retry=60 || true
@@ -55,27 +78,6 @@ jobs:
           # Install PHP dependencies
           echo "📦 Installing PHP dependencies..."
           /usr/local/bin/composer install --optimize-autoloader --no-dev --no-interaction
-          
-          # Stop MySQL to free RAM
-          echo "⏸️  Stopping MySQL temporarily..."
-          systemctl stop mysql || true
-          
-          # Install Node dependencies
-          echo "📦 Installing Node dependencies..."
-          npm ci
-          
-          # Build frontend
-          echo "🔨 Building frontend..."
-          npm run build
-          
-          # Start MySQL
-          echo "▶️  Starting MySQL..."
-          systemctl start mysql || true
-          
-          # Clean dev dependencies
-          echo "🧹 Removing dev dependencies..."
-          rm -rf node_modules
-          npm ci --omit=dev
           
           # Database migrations
           echo "💾 Running migrations..."
@@ -95,7 +97,7 @@ jobs:
           
           # Permissions
           echo "🔐 Setting permissions..."
-          chmod -R 775 storage bootstrap/cache
+          chmod -R 775 storage bootstrap/cache public/build
           chown -R www:www .
           
           # Disable maintenance
