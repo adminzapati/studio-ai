@@ -14,6 +14,17 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
     
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '24'
+        cache: 'npm'
+    
+    - name: Install dependencies and build
+      run: |
+        npm ci
+        npm run build
+    
     - name: Setup SSH
       uses: webfactory/ssh-agent@v0.9.0
       with:
@@ -24,7 +35,18 @@ jobs:
         mkdir -p ~/.ssh
         ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
     
-    - name: Deploy to Production Server
+    - name: Upload build files
+      env:
+        SSH_USER: ${{ secrets.SSH_USER }}
+        SSH_HOST: ${{ secrets.SSH_HOST }}
+        PROJECT_PATH: ${{ secrets.PROJECT_PATH }}
+      run: |
+        rsync -avz --delete \
+          -e "ssh -o StrictHostKeyChecking=no" \
+          ./public/build/ \
+          $SSH_USER@$SSH_HOST:$PROJECT_PATH/public/build/
+    
+    - name: Deploy to server
       env:
         SSH_USER: ${{ secrets.SSH_USER }}
         SSH_HOST: ${{ secrets.SSH_HOST }}
@@ -33,89 +55,25 @@ jobs:
         ssh $SSH_USER@$SSH_HOST << 'ENDSSH'
           set -e
           
-          echo "========================================="
-          echo "🚀 Starting Deployment"
-          echo "========================================="
-          
+          echo "🚀 Deploying..."
           cd ${{ secrets.PROJECT_PATH }}
           
-          # Maintenance mode
-          echo "🔒 Enabling maintenance mode..."
-          php artisan down --retry=60 --secret="deployment-secret-key" || true
+          php artisan down --retry=60 || true
           
-          # Pull latest code
-          echo "📥 Pulling latest code..."
           git fetch origin main
           git reset --hard origin/main
           
-          # Install PHP dependencies
-          echo "📦 Installing PHP dependencies..."
-          composer install --optimize-autoloader --no-dev --no-interaction --prefer-dist
+          composer install --optimize-autoloader --no-dev --no-interaction
           
-          # Stop MySQL temporarily to free RAM for build
-          echo "⏸️  Stopping MySQL..."
-          systemctl stop mysql || true
-          
-          # Install ALL Node dependencies (including devDependencies for build)
-          echo "📦 Installing Node dependencies..."
-          npm ci
-          
-          # Build frontend assets
-          echo "🔨 Building frontend..."
-          npm run build
-          
-          # Start MySQL again
-          echo "▶️  Starting MySQL..."
-          systemctl start mysql || true
-          
-          # Remove dev dependencies to save space
-          echo "🧹 Cleaning dev dependencies..."
-          rm -rf node_modules
-          npm ci --omit=dev
-          
-          # Database migrations
-          echo "💾 Running migrations..."
           php artisan migrate --force
-          
-          # Clear caches
-          echo "🧹 Clearing caches..."
-          php artisan config:clear
-          php artisan cache:clear
-          php artisan route:clear
-          php artisan view:clear
-          
-          # Optimize
-          echo "⚡ Optimizing..."
-          php artisan config:cache
-          php artisan route:cache
-          php artisan view:cache
-          php artisan event:cache
-          
-          # Clear OPcache
           php artisan optimize:clear
-          
-          # Restart workers
-          echo "🔄 Restarting workers..."
+          php artisan optimize
           php artisan queue:restart
           
-          if command -v supervisorctl &> /dev/null; then
-            supervisorctl restart laravel-worker:* 2>/dev/null || echo "No supervisor workers"
-          fi
-          
-          # Permissions
-          echo "🔐 Setting permissions..."
-          chmod -R 775 storage bootstrap/cache
+          chmod -R 775 storage bootstrap/cache public/build
           chown -R www:www .
           
-          # Disable maintenance
-          echo "🔓 Disabling maintenance mode..."
           php artisan up
           
-          echo ""
-          echo "✅ Deployment Completed!"
-          echo "========================================="
+          echo "✅ Deployed!"
         ENDSSH
-    
-    - name: Deployment Status
-      if: success()
-      run: echo "🎉 Successfully deployed to production!"
