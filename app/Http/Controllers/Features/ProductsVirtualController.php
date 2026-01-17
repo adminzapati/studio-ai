@@ -588,7 +588,7 @@ class ProductsVirtualController extends Controller
         }
 
         try {
-            Storage::disk('public')->move($job->result_image_path, $newPath);
+            Storage::disk('public')->copy($job->result_image_path, $newPath);
         } catch (\Exception $e) {
             \App\Core\Logging\AppLogger::error('Failed to move image to library', ['error' => $e->getMessage()]);
             return response()->json([
