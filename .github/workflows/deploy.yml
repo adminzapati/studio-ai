@@ -1,0 +1,119 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Deploy to VPS
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 📥 Checkout code
+      uses: actions/checkout@v4
+    
+    - name: 🔐 Setup SSH
+      uses: webfactory/ssh-agent@v0.9.0
+      with:
+        ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+    
+    - name: 📦 Add server to known_hosts
+      run: |
+        mkdir -p ~/.ssh
+        ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
+    
+    - name: 🚀 Deploy to Production Server
+      env:
+        SSH_USER: ${{ secrets.SSH_USER }}
+        SSH_HOST: ${{ secrets.SSH_HOST }}
+        PROJECT_PATH: ${{ secrets.PROJECT_PATH }}
+      run: |
+        ssh $SSH_USER@$SSH_HOST << 'ENDSSH'
+          set -e
+          
+          echo "========================================="
+          echo "🚀 Starting Deployment"
+          echo "========================================="
+          
+          cd ${{ secrets.PROJECT_PATH }}
+          
+          # Maintenance mode
+          echo "🔒 Enabling maintenance mode..."
+          php artisan down --retry=60 --secret="deployment-secret-key" || true
+          
+          # Pull latest code
+          echo "📥 Pulling latest code from main branch..."
+          git fetch origin main
+          git reset --hard origin/main
+          
+          # Install PHP dependencies
+          echo "📦 Installing PHP dependencies..."
+          composer install --optimize-autoloader --no-dev --no-interaction --prefer-dist
+          
+          # Install Node dependencies
+          echo "📦 Installing Node dependencies..."
+          npm ci --production
+          
+          # Build frontend assets
+          echo "🔨 Building frontend assets..."
+          npm run build
+          
+          # Run database migrations
+          echo "💾 Running database migrations..."
+          php artisan migrate --force
+          
+          # Clear all caches
+          echo "🧹 Clearing all caches..."
+          php artisan config:clear
+          php artisan cache:clear
+          php artisan route:clear
+          php artisan view:clear
+          
+          # Optimize application
+          echo "⚡ Optimizing application..."
+          php artisan config:cache
+          php artisan route:cache
+          php artisan view:cache
+          php artisan event:cache
+          
+          # Clear OPcache
+          echo "🗑️ Clearing OPcache..."
+          php artisan optimize:clear
+          
+          # Restart queue workers
+          echo "🔄 Restarting queue workers..."
+          php artisan queue:restart
+          
+          # Restart supervisor workers (if exists)
+          if command -v supervisorctl &> /dev/null; then
+            supervisorctl restart laravel-worker:* 2>/dev/null || echo "No supervisor workers found"
+          fi
+          
+          # Fix permissions
+          echo "🔐 Setting correct permissions..."
+          chmod -R 775 storage bootstrap/cache
+          chown -R www:www .
+          
+          # Disable maintenance mode
+          echo "🔓 Disabling maintenance mode..."
+          php artisan up
+          
+          echo ""
+          echo "========================================="
+          echo "✅ Deployment Completed Successfully!"
+          echo "🕐 $(date)"
+          echo "========================================="
+        ENDSSH
+    
+    - name: ✅ Deployment Status
+      if: success()
+      run: |
+        echo "🎉 Successfully deployed to production!"
+        echo "🌐 Site: https://studioai.allship.vn"
+    
+    - name: ❌ Deployment Failed
+      if: failure()
+      run: |
+        echo "💥 Deployment failed! Check the logs above."
