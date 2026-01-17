@@ -11,25 +11,47 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-    - name: 📥 Checkout code
+    - name: Checkout code
       uses: actions/checkout@v4
     
-    - name: 🔐 Setup SSH
+    # Build frontend on GitHub (có nhiều RAM)
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+    
+    - name: Install dependencies and build
+      run: |
+        npm ci
+        npm run build
+    
+    # Setup SSH
+    - name: Setup SSH
       uses: webfactory/ssh-agent@v0.9.0
       with:
         ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
     
-    - name: 📦 Add server to known_hosts
+    - name: Add server to known_hosts
       run: |
         mkdir -p ~/.ssh
         ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
     
-    - name: 🚀 Deploy to Production Server
+    # Deploy to server
+    - name: Deploy to Production Server
       env:
         SSH_USER: ${{ secrets.SSH_USER }}
         SSH_HOST: ${{ secrets.SSH_HOST }}
         PROJECT_PATH: ${{ secrets.PROJECT_PATH }}
       run: |
+        # Upload built assets first
+        echo "📤 Uploading built assets..."
+        rsync -avz --delete \
+          -e "ssh -o StrictHostKeyChecking=no" \
+          ./public/build/ \
+          $SSH_USER@$SSH_HOST:$PROJECT_PATH/public/build/
+        
+        # Then deploy the rest
         ssh $SSH_USER@$SSH_HOST << 'ENDSSH'
           set -e
           
@@ -41,90 +63,58 @@ jobs:
           
           # Maintenance mode
           echo "🔒 Enabling maintenance mode..."
-          php artisan down --retry=60 --secret="deployment-secret-key" || true
+          php artisan down --retry=60 || true
           
           # Pull latest code
-          echo "📥 Pulling latest code from main branch..."
+          echo "📥 Pulling latest code..."
           git fetch origin main
           git reset --hard origin/main
           
-          # Load NVM and use Node v20
-          echo "🔧 Setting up Node.js..."
-          export NVM_DIR="$HOME/.nvm"
-          [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-          nvm use 20
+          # Install PHP dependencies
+          echo "📦 Installing PHP dependencies..."
+          composer install --optimize-autoloader --no-dev --no-interaction
           
-          # Install Node dependencies (INCLUDING devDependencies for build)
-          echo "📦 Installing Node dependencies..."
-          npm ci
-          
-          # Build frontend assets
-          echo "🔨 Building frontend assets..."
-          npm run build
-          
-          # Clean up node_modules to save space (optional)
-          echo "🧹 Cleaning up dev dependencies..."
-          rm -rf node_modules
+          # Install only production node modules (no build needed)
+          echo "📦 Installing production Node dependencies..."
           npm ci --production
           
-          # Build frontend assets
-          echo "🔨 Building frontend assets..."
-          npm run build
-          
-          # Run database migrations
-          echo "💾 Running database migrations..."
+          # Database migrations
+          echo "💾 Running migrations..."
           php artisan migrate --force
           
-          # Clear all caches
-          echo "🧹 Clearing all caches..."
+          # Clear caches
+          echo "🧹 Clearing caches..."
           php artisan config:clear
           php artisan cache:clear
           php artisan route:clear
           php artisan view:clear
           
-          # Optimize application
-          echo "⚡ Optimizing application..."
+          # Optimize
+          echo "⚡ Optimizing..."
           php artisan config:cache
           php artisan route:cache
           php artisan view:cache
           php artisan event:cache
           
-          # Clear OPcache
-          echo "🗑️ Clearing OPcache..."
-          php artisan optimize:clear
-          
-          # Restart queue workers
-          echo "🔄 Restarting queue workers..."
+          # Restart workers
+          echo "🔄 Restarting workers..."
           php artisan queue:restart
+          supervisorctl restart laravel-worker:* 2>/dev/null || true
           
-          # Restart supervisor workers (if exists)
-          if command -v supervisorctl &> /dev/null; then
-            supervisorctl restart laravel-worker:* 2>/dev/null || echo "No supervisor workers found"
-          fi
-          
-          # Fix permissions
-          echo "🔐 Setting correct permissions..."
-          chmod -R 775 storage bootstrap/cache
+          # Permissions
+          echo "🔐 Setting permissions..."
+          chmod -R 775 storage bootstrap/cache public/build
           chown -R www:www .
           
-          # Disable maintenance mode
+          # Disable maintenance
           echo "🔓 Disabling maintenance mode..."
           php artisan up
           
           echo ""
-          echo "========================================="
-          echo "✅ Deployment Completed Successfully!"
-          echo "🕐 $(date)"
+          echo "✅ Deployment Completed!"
           echo "========================================="
         ENDSSH
     
-    - name: ✅ Deployment Status
+    - name: Deployment Status
       if: success()
-      run: |
-        echo "🎉 Successfully deployed to production!"
-        echo "🌐 Site: https://studioai.allship.vn"
-    
-    - name: ❌ Deployment Failed
-      if: failure()
-      run: |
-        echo "💥 Deployment failed! Check the logs above."
+      run: echo "🎉 Successfully deployed to production!"
