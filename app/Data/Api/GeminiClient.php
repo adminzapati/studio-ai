@@ -138,6 +138,7 @@ Choose the correct template based on Scene Type:
 1. **BE SPECIFIC**: Do not say "outside". Say "grey brick pavement". Do not say "lighting". Say "dappled natural sunlight".
 2. **USE GENERIC PRODUCT TERMS**: "sandals", "dress", "t-shirt". NO color/material descriptions of the product itself.
 3. **INCLUDE PROPS**: If there is a glass of iced coffee, MENTION IT.
+4. **COLOR FIDELITY**: IMPORTANT! Add the phrase "maintaining true-to-life product color" to the prompt to prevent lighting (e.g., golden hour) from altering the product's actual color.
 
 **Output Format (JSON):**
 {

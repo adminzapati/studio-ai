@@ -346,7 +346,7 @@ class ProductsVirtualController extends Controller
                 'size_ratio' => $request->size_ratio ?? '1:1',
                 'background' => $request->background ?? 'auto',
                 'quality' => $request->quality ?? 'low',
-                'format' => $request->format ?? 'png',
+                'format' => $request->input('format', 'png'),
                 'model_preset_id' => $request->model_preset_id,
                 'status' => 'generating',
             ]);

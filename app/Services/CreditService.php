@@ -17,35 +17,38 @@ class CreditService
     /**
      * Calculate credit cost for image generation.
      * 
-     * Formula:
-     * Low Quality (1 credit base)
-     * Medium Quality (4 credits base)
-     * High Quality (15 credits base)
-     * 
-     * Ratios:
-     * 1:1 = 1.0x
-     * 2:3/3:2/4:3/3:4 = 1.5x
-     * 16:9/9:16 = 1.8x
+     * Pricing Table:
+     * - Low 1:1 = 1 credit
+     * - Low 2:3/3:2 = 1.5 credits
+     * - Medium 1:1 = 4 credits
+     * - Medium 2:3/3:2 = 6 credits
+     * - High 1:1 = 15 credits
+     * - High 2:3/3:2 = 22 credits
      */
     public static function calculateCost(string $quality, string $ratio): int
     {
-        // Base cost by quality
-        $baseCredits = match($quality) {
-            'low' => 1, // $0.009
-            'medium' => 4, // $0.034
-            'high' => 15, // $0.133
+        // Determine if ratio is square (1:1) or rectangular (2:3, 3:2, etc.)
+        $isSquare = in_array($ratio, ['1:1', 'square', 'square_hd']);
+        
+        // Calculate based on quality and ratio
+        $credits = match([$quality, $isSquare]) {
+            // Low quality
+            ['low', true] => 1,      // 1:1
+            ['low', false] => 1.5,   // 2:3 or 3:2
+            
+            // Medium quality
+            ['medium', true] => 4,   // 1:1
+            ['medium', false] => 6,  // 2:3 or 3:2
+            
+            // High quality
+            ['high', true] => 15,    // 1:1
+            ['high', false] => 22,   // 2:3 or 3:2
+            
+            // Default fallback (medium 1:1)
             default => 4,
         };
         
-        // Multiplier by ratio (area complexity)
-        $multiplier = match($ratio) {
-            'square_hd' => 1.0, // 1024x1024
-            'portrait_4_3', 'landscape_4_3' => 1.3,
-            'portrait_16_9', 'landscape_16_9' => 1.8,
-            default => 1.0,
-        };
-        
-        return (int) ceil($baseCredits * $multiplier);
+        return (int) ceil($credits);
     }
 
     /**
