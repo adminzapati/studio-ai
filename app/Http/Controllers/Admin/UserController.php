@@ -135,7 +135,9 @@ class UserController extends Controller
 
         // Handle Subscription Plan Change (Force Update)
         if ($request->filled('subscription_plan_id')) {
-            $user->activeSubscription->update(['status' => 'cancelled']); // End current
+            if ($user->activeSubscription) {
+                $user->activeSubscription->update(['status' => 'cancelled']); // End current
+            }
             
             $newPlan = \App\Models\SubscriptionPlan::find($request->subscription_plan_id);
             if ($newPlan) {
