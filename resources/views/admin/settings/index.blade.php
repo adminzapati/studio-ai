@@ -140,11 +140,22 @@
                                     </span>
                                 </div>
                             </div>
-                            <div>
+                            <div class="flex items-center gap-4">
+                                <!-- Cleanup Schedule -->
+                                <div class="text-right">
+                                    <label for="cleanup_schedule" class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Auto Cleanup</label>
+                                    <select id="cleanup_schedule" name="cleanup_schedule" class="text-xs py-1.5 pl-2 pr-6 border-gray-300 dark:border-zinc-600 dark:bg-zinc-700 dark:text-white rounded-lg focus:ring-indigo-500 focus:border-indigo-500">
+                                        <option value="hourly" {{ ($settings['cleanup_schedule'] ?? 'daily') === 'hourly' ? 'selected' : '' }}>Hourly</option>
+                                        <option value="daily" {{ ($settings['cleanup_schedule'] ?? 'daily') === 'daily' ? 'selected' : '' }}>Daily</option>
+                                        <option value="weekly" {{ ($settings['cleanup_schedule'] ?? 'daily') === 'weekly' ? 'selected' : '' }}>Weekly</option>
+                                        <option value="monthly" {{ ($settings['cleanup_schedule'] ?? 'daily') === 'monthly' ? 'selected' : '' }}>Monthly</option>
+                                    </select>
+                                </div>
+                                
                                 <button type="button" form="clear-temp-form" 
                                         onclick="document.getElementById('clear-temp-form').submit(); return false;"
                                         class="px-4 py-2 bg-white dark:bg-zinc-700 border border-gray-300 dark:border-zinc-600 text-red-600 dark:text-red-400 text-sm font-medium rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors shadow-sm">
-                                    Clear Temp Files
+                                    Clear Now
                                 </button>
                             </div>
                         </div>
