@@ -101,6 +101,20 @@
                                 <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-amber-300 dark:peer-focus:ring-amber-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-amber-500"></div>
                             </label>
                         </div>
+
+                        <!-- Fal.ai Upload Mode -->
+                        <div class="flex items-center justify-between p-4 bg-amber-50 dark:bg-amber-900/20 rounded-xl border border-amber-200 dark:border-amber-800 mb-4">
+                            <div>
+                                <label for="fal_upload_mode" class="text-sm font-medium text-gray-800 dark:text-gray-200">Fal.ai Upload Mode</label>
+                                <p class="text-xs text-gray-600 dark:text-gray-400">Choose how images are sent to Fal.ai</p>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <select id="fal_upload_mode" name="fal_upload_mode" class="text-sm border-gray-300 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white rounded-lg focus:ring-amber-500 focus:border-amber-500">
+                                    <option value="base64" {{ ($settings['fal_upload_mode'] ?? 'base64') === 'base64' ? 'selected' : '' }}>Base64 (Direct)</option>
+                                    <option value="url" {{ ($settings['fal_upload_mode'] ?? 'base64') === 'url' ? 'selected' : '' }}>URL (Public Link)</option>
+                                </select>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Storage Management -->

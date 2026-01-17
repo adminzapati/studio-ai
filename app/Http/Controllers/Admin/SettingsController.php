@@ -16,6 +16,7 @@ class SettingsController extends Controller
             'gemini_api_key' => Setting::get('gemini_api_key', ''),
             'fal_api_key' => Setting::get('fal_api_key', ''),
             'products_virtual_dev_mode' => Setting::get('products_virtual_dev_mode', 'false') === 'true',
+            'fal_upload_mode' => Setting::get('fal_upload_mode', 'base64'),
         ];
         
         $tempStats = $this->calculateProductsVirtualTempSize();
@@ -29,7 +30,13 @@ class SettingsController extends Controller
             'gemini_api_key' => 'nullable|string',
             'fal_api_key' => 'nullable|string',
             'products_virtual_dev_mode' => 'sometimes|boolean',
+            'fal_upload_mode' => 'sometimes|string|in:base64,url',
         ]);
+
+        // Handle fal upload mode
+        if ($request->has('fal_upload_mode')) {
+            Setting::set('fal_upload_mode', $request->fal_upload_mode, 'system');
+        }
 
         // Handle boolean dev mode setting
         Setting::set('products_virtual_dev_mode', $request->has('products_virtual_dev_mode') ? 'true' : 'false', 'system');

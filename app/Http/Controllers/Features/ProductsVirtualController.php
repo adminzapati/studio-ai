@@ -381,19 +381,29 @@ class ProductsVirtualController extends Controller
             }
             */
             if (!empty($job->product_images_paths)) {
+                $uploadMode = \App\Models\Setting::get('fal_upload_mode', 'base64');
+
                 foreach ($job->product_images_paths as $path) {
                     try {
-                        $absPath = Storage::disk('public')->path($path);
-                        if (file_exists($absPath)) {
-                            $fileData = file_get_contents($absPath);
-                            $mimeType = mime_content_type($absPath) ?: 'image/png';
-                            $base64 = base64_encode($fileData);
-                            $dataUri = "data:{$mimeType};base64,{$base64}";
-                            $falImageUrls[] = $dataUri;
-                            \App\Core\Logging\AppLogger::info('Converted Product Image to Base64', ['path' => $path, 'size' => strlen($base64)]);
+                        if ($uploadMode === 'url') {
+                            // URL MODE (Production)
+                            $url = Storage::disk('public')->url($path);
+                            $falImageUrls[] = $url;
+                            \App\Core\Logging\AppLogger::info('Using Public URL for Product Image', ['url' => $url]);
+                        } else {
+                            // BASE64 MODE (Default/Local)
+                            $absPath = Storage::disk('public')->path($path);
+                            if (file_exists($absPath)) {
+                                $fileData = file_get_contents($absPath);
+                                $mimeType = mime_content_type($absPath) ?: 'image/png';
+                                $base64 = base64_encode($fileData);
+                                $dataUri = "data:{$mimeType};base64,{$base64}";
+                                $falImageUrls[] = $dataUri;
+                                \App\Core\Logging\AppLogger::info('Converted Product Image to Base64', ['path' => $path, 'size' => strlen($base64)]);
+                            }
                         }
                     } catch (\Exception $e) {
-                         \App\Core\Logging\AppLogger::error('Failed to convert image to Base64', ['path' => $path, 'error' => $e->getMessage()]);
+                         \App\Core\Logging\AppLogger::error('Failed to prepare image for Fal.ai', ['path' => $path, 'mode' => $uploadMode, 'error' => $e->getMessage()]);
                     }
                 }
             }
