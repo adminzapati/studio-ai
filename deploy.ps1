@@ -32,8 +32,13 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 # Deploy on server
+# Deploy on server
+Write-Host "Uploading deploy script to server..." -ForegroundColor Yellow
+scp deploy.sh ${SERVER}:/www/wwwroot/studioai/deploy.sh
+ssh $SERVER "chmod +x /www/wwwroot/studioai/deploy.sh"
+
 Write-Host "Running deployment on server..." -ForegroundColor Yellow
-ssh $SERVER "/www/wwwroot/deploy.sh"
+ssh $SERVER "/www/wwwroot/studioai/deploy.sh"
 
 if ($LASTEXITCODE -eq 0) {
     Write-Host ""
