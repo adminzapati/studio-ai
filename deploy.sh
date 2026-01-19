@@ -3,8 +3,8 @@ set -e
 
 # --- CONFIGURATION ---
 PROJECT_DIR="/www/wwwroot/studioai" # <--- CHECK THIS PATH
-USER="root"
-GROUP="root"
+USER="www"
+GROUP="www"
 # ---------------------
 
 echo "Starting deployment..."
