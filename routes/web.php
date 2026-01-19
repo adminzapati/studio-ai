@@ -19,6 +19,7 @@ use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\WizardOptionController;
 use App\Http\Controllers\Admin\ModelPresetController;
+use App\Http\Controllers\Admin\FileManagerController;
 
 /*
 |--------------------------------------------------------------------------
@@ -139,6 +140,11 @@ Route::middleware(['auth', 'role:Admin'])->prefix('admin')->name('admin.')->grou
     Route::get('subscription-requests', [App\Http\Controllers\Admin\SubscriptionRequestController::class, 'index'])->name('subscription-requests.index');
     Route::post('subscription-requests/{subscriptionRequest}/approve', [App\Http\Controllers\Admin\SubscriptionRequestController::class, 'approve'])->name('subscription-requests.approve');
     Route::post('subscription-requests/{subscriptionRequest}/reject', [App\Http\Controllers\Admin\SubscriptionRequestController::class, 'reject'])->name('subscription-requests.reject');
+
+    // File Manager
+    Route::get('/files', [FileManagerController::class, 'index'])->name('files.index');
+    Route::get('/files/download/{path}', [FileManagerController::class, 'download'])->name('files.download');
+    Route::delete('/files/delete', [FileManagerController::class, 'delete'])->name('files.delete');
 
     // Subscription Plans Management
     Route::resource('subscription-plans', App\Http\Controllers\Admin\SubscriptionPlanController::class)->only(['index', 'edit', 'update']);

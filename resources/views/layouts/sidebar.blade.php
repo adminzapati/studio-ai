@@ -147,6 +147,13 @@
                 <span class="ml-3" x-show="sidebarOpen" x-transition:enter="transition ease-out duration-100 delay-100" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100">Manage Plans</span>
             </a>
 
+            <!-- File Manager -->
+            <a href="{{ route('admin.files.index') }}" 
+               class="flex items-center px-3 py-2.5 text-sm font-medium rounded-xl transition-colors whitespace-nowrap {{ request()->routeIs('admin.files.*') ? 'bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-300' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:text-gray-900 dark:hover:text-gray-200' }}">
+                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path></svg>
+                <span class="ml-3" x-show="sidebarOpen" x-transition:enter="transition ease-out duration-100 delay-100" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100">File Manager</span>
+            </a>
+
             <!-- Settings -->
             <a href="{{ route('admin.settings.index') }}" 
                class="flex items-center px-3 py-2.5 text-sm font-medium rounded-xl transition-colors whitespace-nowrap {{ request()->routeIs('admin.settings.*') ? 'bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-300' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:text-gray-900 dark:hover:text-gray-200' }}">
