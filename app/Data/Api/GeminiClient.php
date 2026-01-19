@@ -125,20 +125,20 @@ Create a prompt that instructs the AI to RECREATE the Target Scene EXACTLY (ligh
 Choose the correct template based on Scene Type:
 
 **TEMPLATE A (WITH PERSON/MODEL):**
-"Fashion product photography, [Model Description] wearing [Generic Product], [Pose/Action], [Detailed Environment & Props], [Lighting & Atmosphere], [Camera Angle], [Quality Keywords] --ar [Aspect Ratio]"
+"Fashion product photography, [Model Description] wearing [Generic Product], [Pose/Action], [Detailed Environment & Props], [Lighting & Atmosphere], [Camera Angle], maintaining true-to-life product color, [Quality Keywords] --ar [Aspect Ratio]"
 
 **TEMPLATE B (PRODUCT ONLY/NO PERSON):**
-"Product photography, [Generic Product], [Placement], [Detailed Environment & Props], [Lighting & Atmosphere], [Camera Angle], [Quality Keywords] --ar [Aspect Ratio]"
+"Product photography, [Generic Product], [Placement], [Detailed Environment & Props], [Lighting & Atmosphere], [Camera Angle], maintaining true-to-life product color, [Quality Keywords] --ar [Aspect Ratio]"
 
 **EXAMPLES TO FOLLOW:**
-- *Model Shot Example*: "Fashion product photography, male model wearing sandals, seated with legs extended, on grey brick pavement with blurred urban background featuring a glass prop, natural diffused lighting with soft shadows, eye-level angle, 8K photorealistic, commercial quality --ar 2:3"
-- *Product Only Example*: "Product photography, sandals, placed on a fluffy white rug. Background includes blurred white cubic forms. Soft, diffused lighting with subtle shadows. Eye-level angle, 8K photorealistic, studio product shot --ar 2:3"
+- *Model Shot Example*: "Fashion product photography, male model wearing sandals, seated with legs extended, on grey brick pavement with blurred urban background featuring a glass prop, natural diffused lighting with soft shadows, eye-level angle, maintaining true-to-life product color, 8K photorealistic, commercial quality --ar 2:3"
+- *Product Only Example*: "Product photography, sandals, placed on a fluffy white rug. Background includes blurred white cubic forms. Soft, diffused lighting with subtle shadows. Eye-level angle, maintaining true-to-life product color, 8K photorealistic, studio product shot --ar 2:3"
 
 **STRICT RULES:**
 1. **BE SPECIFIC**: Do not say "outside". Say "grey brick pavement". Do not say "lighting". Say "dappled natural sunlight".
 2. **USE GENERIC PRODUCT TERMS**: "sandals", "dress", "t-shirt". NO color/material descriptions of the product itself.
 3. **INCLUDE PROPS**: If there is a glass of iced coffee, MENTION IT.
-4. **COLOR FIDELITY**: IMPORTANT! Add the phrase "maintaining true-to-life product color" to the prompt to prevent lighting (e.g., golden hour) from altering the product's actual color.
+4. **MANDATORY PHRASE**: You MUST include "maintaining true-to-life product color" in every prompt just before the quality keywords.
 
 **Output Format (JSON):**
 {
